@@ -73,13 +73,45 @@ namespace Metanoia
         public string ReadString(int Size)
         {
             string str = "";
-            char ch;
             for(int i = 0; i < Size; i++)
             {
-                ch = ReadChar();
-                str = str + ch;
+                byte b = ReadByte();
+                if(b != 0)
+                {
+                    str = str + (char)b;
+                }
             }
             return str;
+        }
+
+        public float ReadHalfSingle()
+        {
+            int hbits = ReadInt16();
+
+            int mant = hbits & 0x03ff;            // 10 bits mantissa
+            int exp = hbits & 0x7c00;            // 5 bits exponent
+            if (exp == 0x7c00)                   // NaN/Inf
+                exp = 0x3fc00;                    // -> NaN/Inf
+            else if (exp != 0)                   // normalized value
+            {
+                exp += 0x1c000;                   // exp - 15 + 127
+                if (mant == 0 && exp > 0x1c400)  // smooth transition
+                    return BitConverter.ToSingle(BitConverter.GetBytes((hbits & 0x8000) << 16
+                        | exp << 13 | 0x3ff), 0);
+            }
+            else if (mant != 0)                  // && exp==0 -> subnormal
+            {
+                exp = 0x1c400;                    // make it normal
+                do
+                {
+                    mant <<= 1;                   // mantissa * 2
+                    exp -= 0x400;                 // decrease exp by 1
+                } while ((mant & 0x400) == 0); // while not normal
+                mant &= 0x3ff;                    // discard subnormal bit
+            }                                     // else +/-0 -> +/-0
+            return BitConverter.ToSingle(BitConverter.GetBytes(          // combine all parts
+                (hbits & 0x8000) << 16          // sign  << ( 31 - 15 )
+                | (exp | mant) << 13), 0);         // value << ( 23 - 10 )
         }
 
         public uint Position()

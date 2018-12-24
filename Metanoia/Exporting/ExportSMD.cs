@@ -49,7 +49,7 @@ namespace Metanoia.Exporting
                                 string TextureName = "Texture_" + TextureBank.Count + ".png";
                                 Metanoia.Rendering.RenderTexture Temp = new Metanoia.Rendering.RenderTexture();
                                 Temp.LoadGenericTexture(m.Material.TextureDiffuse);
-                                Temp.ExportPNG(TextureName);
+                                Temp.ExportPNG(new FileInfo(FilePath).Directory.FullName + "/" + TextureName);
                                 Temp.Delete();
                                 TextureBank.Add(m.Material.TextureDiffuse, TextureName);
                                 MaterialName = TextureName;

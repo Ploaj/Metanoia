@@ -74,9 +74,9 @@ namespace Metanoia.Formats.N64
                         f3 = reader.ReadByte() / 2;
                         reader.Skip(4);
 
-                        vertBuffer[f1].bone = BoneIndex;
-                        vertBuffer[f2].bone = BoneIndex;
-                        vertBuffer[f3].bone = BoneIndex;
+                        //vertBuffer[f1].bone = BoneIndex;
+                        //vertBuffer[f2].bone = BoneIndex;
+                        //vertBuffer[f3].bone = BoneIndex;
 
                         if (!list.verts.Contains(vertBuffer[f1])) list.verts.Add(vertBuffer[f1]);
                         if (!list.verts.Contains(vertBuffer[f2])) list.verts.Add(vertBuffer[f2]);
@@ -89,9 +89,9 @@ namespace Metanoia.Formats.N64
                         f1 = reader.ReadByte() / 2;
                         f2 = reader.ReadByte() / 2;
                         f3 = reader.ReadByte() / 2;
-                        vertBuffer[f1].bone = BoneIndex;
-                        vertBuffer[f2].bone = BoneIndex;
-                        vertBuffer[f3].bone = BoneIndex;
+                        //vertBuffer[f1].bone = BoneIndex;
+                        //vertBuffer[f2].bone = BoneIndex;
+                        //vertBuffer[f3].bone = BoneIndex;
                         if (!list.verts.Contains(vertBuffer[f1])) list.verts.Add(vertBuffer[f1]);
                         if (!list.verts.Contains(vertBuffer[f2])) list.verts.Add(vertBuffer[f2]);
                         if (!list.verts.Contains(vertBuffer[f3])) list.verts.Add(vertBuffer[f3]);
@@ -102,9 +102,9 @@ namespace Metanoia.Formats.N64
                         f1 = reader.ReadByte() / 2;
                         f2 = reader.ReadByte() / 2;
                         f3 = reader.ReadByte() / 2;
-                        vertBuffer[f1].bone = BoneIndex;
-                        vertBuffer[f2].bone = BoneIndex;
-                        vertBuffer[f3].bone = BoneIndex;
+                        //vertBuffer[f1].bone = BoneIndex;
+                        //vertBuffer[f2].bone = BoneIndex;
+                        //vertBuffer[f3].bone = BoneIndex;
                         if (!list.verts.Contains(vertBuffer[f1])) list.verts.Add(vertBuffer[f1]);
                         if (!list.verts.Contains(vertBuffer[f2])) list.verts.Add(vertBuffer[f2]);
                         if (!list.verts.Contains(vertBuffer[f3])) list.verts.Add(vertBuffer[f3]);

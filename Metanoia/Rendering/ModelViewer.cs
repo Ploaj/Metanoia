@@ -23,6 +23,11 @@ namespace Metanoia.Rendering
             InitializeComponent();
         }
 
+        public void RefreshRender()
+        {
+            Viewport.Invalidate();
+        }
+
         private void SetupViewport()
         {
             GL.ClearColor(Color.Beige);

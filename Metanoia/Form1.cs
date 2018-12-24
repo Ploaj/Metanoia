@@ -72,7 +72,7 @@ namespace Metanoia
                     {
                         Node.Open(File.GetFileBinary());
                         ModelViewer.GenericRenderer.SetGenericModel(ModelFormat.ToGenericModel());
-                        ModelViewer.Invalidate();
+                        ModelViewer.RefreshRender();
                     }
                 }
             }

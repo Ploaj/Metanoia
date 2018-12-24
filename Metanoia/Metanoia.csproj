@@ -56,6 +56,7 @@
     <Compile Include="Formats\FormatAttribute.cs" />
     <Compile Include="Formats\IFileFormat.cs" />
     <Compile Include="Formats\N64\N64Tools.cs" />
+    <Compile Include="Formats\PS3\LBP_MOL.cs" />
     <Compile Include="Modeling\GenericTexture.cs" />
     <Compile Include="Rendering\GenericRenderer.cs" />
     <Compile Include="Rendering\RenderTexture.cs" />

@@ -16,6 +16,7 @@ namespace Metanoia.Rendering
         public void SetGenericModel(GenericModel Model)
         {
             ClearTextures();
+            if (Model == null) return;
 
             Skeleton = Model.Skeleton;
             this.Model = Model;

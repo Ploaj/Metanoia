@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 
 namespace Metanoia.Tools
 {
@@ -641,5 +642,24 @@ namespace Metanoia.Tools
             return o.ToArray();
         }
 
+        public static byte[] ZLIB(byte[] data)
+        {
+            var stream = new MemoryStream();
+            var ms = new MemoryStream(data);
+            ms.ReadByte();
+            ms.ReadByte();
+            var zlibStream = new DeflateStream(ms, CompressionMode.Decompress);
+            byte[] buffer = new byte[2048];
+            while (true)
+            {
+                int size = zlibStream.Read(buffer, 0, buffer.Length);
+                if (size > 0)
+                    stream.Write(buffer, 0, buffer.Length);
+                else
+                    break;
+            }
+            zlibStream.Close();
+            return stream.ToArray();
+        }
     }
 }
