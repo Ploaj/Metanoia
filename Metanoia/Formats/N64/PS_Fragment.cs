@@ -394,7 +394,7 @@ namespace Metanoia.Formats.N64
             foreach(var mesh in Model.Meshes)
             {
                 var material = Model.GetMaterial(mesh);
-                if (material != null)
+                if (material != null && material.TextureDiffuse != null)
                     material.TextureDiffuse = newTexName[material.TextureDiffuse];
             }
 

@@ -59,7 +59,7 @@ namespace Metanoia.Exporting
                             }
                             else
                             {
-                                string TextureName = texture.Name.Equals("") ? "Texture_" + TextureBank.Count + ".png" : texture.Name + ".png";
+                                string TextureName = material.TextureDiffuse.Equals("") ? "Texture_" + TextureBank.Count + ".png" : material.TextureDiffuse + ".png";
                                 Rendering.RenderTexture Temp = new Rendering.RenderTexture();
                                 Temp.LoadGenericTexture(texture);
                                 Temp.ExportPNG(new FileInfo(FilePath).Directory.FullName + "/" + TextureName);

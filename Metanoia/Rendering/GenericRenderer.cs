@@ -33,8 +33,8 @@ namespace Metanoia.Rendering
                 GenericShader.LoadShader("Rendering/Shaders/Generic.vert", ShaderType.VertexShader);
                 GenericShader.LoadShader("Rendering/Shaders/Generic.frag", ShaderType.FragmentShader);
                 GenericShader.CompileProgram();
-                System.Console.WriteLine("Shader Error Log");
-                System.Console.WriteLine(GenericShader.GetErrorLog());
+                System.Diagnostics.Debug.WriteLine("Shader Error Log");
+                System.Diagnostics.Debug.WriteLine(GenericShader.GetErrorLog());
 
                 VertexBuffer = new Buffer(BufferTarget.ArrayBuffer);
                 IndexBuffer = new Buffer(BufferTarget.ElementArrayBuffer);
@@ -62,8 +62,8 @@ namespace Metanoia.Rendering
                 neededTextures.Remove(tex.Key);
             }
 
-            System.Console.WriteLine($"Loaded {Textures.Count} Textures");
-            System.Console.WriteLine($"Missing {string.Join(", ", neededTextures)}");
+            System.Diagnostics.Debug.WriteLine($"Loaded {Textures.Count} Textures");
+            System.Diagnostics.Debug.WriteLine($"Missing {string.Join(", ", neededTextures)}");
         }
 
         private void LoadBufferData(GenericModel Model)

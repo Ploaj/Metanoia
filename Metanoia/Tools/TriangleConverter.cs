@@ -7,6 +7,31 @@ namespace Metanoia.Tools
 {
     public class TriangleConverter
     {
+        /// <summary>
+        /// Converts a list of quads into triangles
+        /// </summary>
+        /// <param name="vertices"></param>
+        /// <param name="outVertices"></param>
+        public static void QuadToList(List<GenericVertex> vertices, out List<GenericVertex> outVertices)
+        {
+            outVertices = new List<GenericVertex>();
+
+            for(int index = 0; index < vertices.Count; index+=4)
+            {
+                outVertices.Add(vertices[index]);
+                outVertices.Add(vertices[index + 1]);
+                outVertices.Add(vertices[index + 2]);
+                outVertices.Add(vertices[index + 1]);
+                outVertices.Add(vertices[index + 3]);
+                outVertices.Add(vertices[index + 2]);
+            }
+        }
+
+        /// <summary>
+        /// Converts a list of triangle strips into triangles
+        /// </summary>
+        /// <param name="vertices"></param>
+        /// <param name="outVertices"></param>
         public static void StripToList(List<GenericVertex> vertices, out List<GenericVertex> outVertices)
         {
             outVertices = new List<GenericVertex>();
@@ -29,6 +54,23 @@ namespace Metanoia.Tools
                 {
                     //Console.WriteLine("ignoring degenerate triangle");
                 }
+            }
+        }
+
+        /// <summary>
+        /// reverses faces for triangle lists only
+        /// </summary>
+        /// <param name="triangles"></param>
+        /// <param name="reversed"></param>
+        public static void ReverseFaces(List<uint> triangles, out List<uint> reversed)
+        {
+            reversed = new List<uint>(triangles.Count);
+
+            for(int i = 0; i < triangles.Count; i+=3)
+            {
+                reversed.Add(triangles[i + 2]);
+                reversed.Add(triangles[i + 1]);
+                reversed.Add(triangles[i]);
             }
         }
     }

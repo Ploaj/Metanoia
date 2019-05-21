@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HSDLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\HSDLib.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
     </Reference>
@@ -54,6 +58,8 @@
     <Compile Include="Exporting\ExportAttribute.cs" />
     <Compile Include="Exporting\ExportSMD.cs" />
     <Compile Include="Formats\FormatAttribute.cs" />
+    <Compile Include="Formats\GameCube\GXTranslator.cs" />
+    <Compile Include="Formats\GameCube\HSD.cs" />
     <Compile Include="Formats\GameCube\HSF.cs" />
     <Compile Include="Formats\IFileFormat.cs" />
     <Compile Include="Formats\Misc\Blitz.cs" />
@@ -149,6 +155,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\icon_bone_off.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="lib\HSDLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
