@@ -30,10 +30,10 @@
         {
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.viewerBox = new System.Windows.Forms.GroupBox();
-            this.fileList = new System.Windows.Forms.ListBox();
-            this.folderTree = new System.Windows.Forms.TreeView();
             this.exportedSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewerBox = new System.Windows.Forms.GroupBox();
+            this.fileList = new System.Windows.Forms.ListView();
+            this.folderTree = new System.Windows.Forms.TreeView();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -55,6 +55,13 @@
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
+            // exportedSelectedToolStripMenuItem
+            // 
+            this.exportedSelectedToolStripMenuItem.Name = "exportedSelectedToolStripMenuItem";
+            this.exportedSelectedToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.exportedSelectedToolStripMenuItem.Text = "Exported Selected";
+            this.exportedSelectedToolStripMenuItem.Click += new System.EventHandler(this.exportedSelectedToolStripMenuItem_Click);
+            // 
             // viewerBox
             // 
             this.viewerBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -71,11 +78,14 @@
             // 
             this.fileList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.fileList.FormattingEnabled = true;
             this.fileList.Location = new System.Drawing.Point(307, 27);
+            this.fileList.MultiSelect = false;
             this.fileList.Name = "fileList";
             this.fileList.Size = new System.Drawing.Size(179, 316);
+            this.fileList.Sorting = System.Windows.Forms.SortOrder.Descending;
             this.fileList.TabIndex = 2;
+            this.fileList.UseCompatibleStateImageBehavior = false;
+            this.fileList.View = System.Windows.Forms.View.List;
             this.fileList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.fileList_MouseDoubleClick);
             // 
             // folderTree
@@ -89,13 +99,6 @@
             this.folderTree.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.folderTree_BeforeExpand);
             this.folderTree.AfterExpand += new System.Windows.Forms.TreeViewEventHandler(this.folderTree_AfterExpand);
             this.folderTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.folderTree_AfterSelect);
-            // 
-            // exportedSelectedToolStripMenuItem
-            // 
-            this.exportedSelectedToolStripMenuItem.Name = "exportedSelectedToolStripMenuItem";
-            this.exportedSelectedToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.exportedSelectedToolStripMenuItem.Text = "Exported Selected";
-            this.exportedSelectedToolStripMenuItem.Click += new System.EventHandler(this.exportedSelectedToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -121,7 +124,7 @@
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.GroupBox viewerBox;
-        private System.Windows.Forms.ListBox fileList;
+        private System.Windows.Forms.ListView fileList;
         private System.Windows.Forms.TreeView folderTree;
         private System.Windows.Forms.ToolStripMenuItem exportedSelectedToolStripMenuItem;
     }

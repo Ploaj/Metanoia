@@ -54,15 +54,28 @@ namespace Metanoia
             {
                 fileList.Items.Clear();
                 fileList.Items.AddRange(((FolderNode)e.Node).GetFiles().ToArray());
+
+                foreach (var item in fileList.Items)
+                {
+                    IFileFormat Node = GetFileFormatFromExtension(((FileItem)item).Extension);
+                    ((FileItem)item).ForeColor = System.Drawing.Color.Gray;
+                    if (Node != null)
+                    {
+                        if (Node is IModelFormat ModelFormat)
+                        {
+                            ((FileItem)item).ForeColor = System.Drawing.Color.Black;
+                        }
+                    }
+                }
             }
         }
 
         private void fileList_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (fileList.SelectedItem == null)
+            if (fileList.SelectedItems[0] == null)
                 return;
 
-            if (fileList.SelectedItem is FileItem File)
+            if (fileList.SelectedItems[0] is FileItem File)
             {
                 IFileFormat Node = GetFileFormatFromExtension(File.Extension);
                 
@@ -71,7 +84,7 @@ namespace Metanoia
                     if(Node is IModelFormat ModelFormat)
                     {
                         Node.Open(File.GetFileBinary());
-                        ModelViewer.GenericRenderer.SetGenericModel(ModelFormat.ToGenericModel());
+                        ModelViewer.SetModel(ModelFormat.ToGenericModel());
                         ModelViewer.RefreshRender();
                     }
                 }
@@ -103,7 +116,7 @@ namespace Metanoia
 
         private void exportedSelectedToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(fileList.SelectedItem is FileItem File)
+            if(fileList.SelectedItems[0] is FileItem File)
             {
                 IFileFormat Node = GetFileFormatFromExtension(File.Extension);
 

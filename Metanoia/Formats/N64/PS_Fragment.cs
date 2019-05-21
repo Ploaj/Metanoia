@@ -46,6 +46,8 @@ namespace Metanoia.Formats.N64
             using (DataReader reader = new DataReader(new MemoryStream(Data)))
             {
                 reader.BigEndian = true;
+                reader.Seek(0x8);
+                if (!reader.ReadString(8).Equals("FRAGMENT")) return;
                 reader.Seek(0x10);
                 uint DataOffset = reader.ReadUInt32();
                 uint RelocationTableOffset = reader.ReadUInt32();
@@ -61,7 +63,7 @@ namespace Metanoia.Formats.N64
                     int mask = 0xFFFF;
                     offsets[i] = reader.ReadInt32();
                     if (RelocationTableOffset > 0xFFFF) mask = 0x1FFFF; // hack
-                    uint temp = reader.Position();
+                    uint temp = reader.Position;
                     reader.Seek((uint)(offsets[i] & 0x1FFFF));
                     reader.WriteInt32At(reader.ReadInt32() & mask, offsets[i] & 0x1FFFF);
                     reader.Seek((uint)(offsets[i] & 0x1FFFF));
@@ -83,7 +85,7 @@ namespace Metanoia.Formats.N64
 
                 // may be objects instead of just textures
                 reader.Seek(textureOffset);
-                int TextureCount = reader.ReadInt32() & 0xFFFFFF; // should have 0x17 in front
+                int TextureCount = reader.ReadInt32() & 0xFFFF; // should have 0x17 in front
                 int PaletteCount = reader.ReadInt16();
                 int VertexCount = reader.ReadInt16();
                 uint TextureOffset = reader.ReadUInt32();
@@ -116,7 +118,7 @@ namespace Metanoia.Formats.N64
                     int bitsize = reader.ReadByte();
                     uint width = reader.ReadUInt16();
                     uint height = reader.ReadUInt16();
-                    int size = reader.ReadInt16(); // sometimes 8 maybe an id? pointer?
+                    uint size = reader.ReadUInt16(); // sometimes 8 maybe an id? pointer?
                     uint texDataOffset = reader.ReadUInt32() & 0x1FFFF;
 
                     Console.WriteLine("Texture " + format + " " + bitsize + " " + size + " " + width + " " + height);
@@ -134,7 +136,7 @@ namespace Metanoia.Formats.N64
                         // Raw
                         if (bitsize == 1) //RGBA
                         {
-                            data = reader.GetSection(texDataOffset, size * bitsize);
+                            data = reader.GetSection(texDataOffset, (int)size * bitsize);
 
                             tex.Mipmaps.Add(data);
                             tex.InternalFormat = PixelInternalFormat.Luminance8;
@@ -148,14 +150,14 @@ namespace Metanoia.Formats.N64
 
                         if (bitsize == 0) //4bpp
                         {
-                            data = reader.GetSection(texDataOffset, size / 2);
+                            data = reader.GetSection(texDataOffset, (int)size / 2);
 
                             tex.Mipmaps.Add(data);
                             tex.InternalFormat = PixelInternalFormat.Alpha4;
                         }
                         else if (bitsize == 1) //8bpp
                         {
-                            data = reader.GetSection(texDataOffset, size * bitsize);
+                            data = reader.GetSection(texDataOffset, (int)size * bitsize);
 
                             tex.Mipmaps.Add(data);
                             tex.InternalFormat = PixelInternalFormat.Alpha8;
@@ -165,7 +167,7 @@ namespace Metanoia.Formats.N64
                     {
                         if (bitsize == 2)
                         {
-                            data = reader.GetSection(texDataOffset, size * bitsize);
+                            data = reader.GetSection(texDataOffset, (int)size * bitsize);
                             // swap endian
                             for (int j = 0; j < data.Length / 2; j++)
                             {
@@ -179,7 +181,7 @@ namespace Metanoia.Formats.N64
                         else if (bitsize == 3)
                         {
                             tex.InternalFormat = PixelInternalFormat.Rgba8;
-                            data = reader.GetSection(texDataOffset, size * 4);
+                            data = reader.GetSection(texDataOffset, (int)size * 4);
                             tex.Mipmaps.Add(data);
                         }
                     }
@@ -203,7 +205,7 @@ namespace Metanoia.Formats.N64
                     int doff, temp;
                     //Console.WriteLine(reader.Position().ToString("x") + " " + reader.ReadByte().ToString("x"));
                     reader.ReadByte();
-                    reader.Seek(reader.Position() - 1);
+                    reader.Seek(reader.Position - 1);
                     switch (reader.ReadByte())
                     {
                         case 0x03: // Perhaps some object offset? Offset goes to beginning of file. Material maybe?
@@ -288,7 +290,7 @@ namespace Metanoia.Formats.N64
                             reader.Skip(1);
                             int w = reader.ReadInt16(); // bone index
                             doff = reader.ReadInt32();
-                            temp = (int)reader.Position();
+                            temp = (int)reader.Position;
 
                             reader.Seek((uint)doff);
                             {
@@ -304,7 +306,7 @@ namespace Metanoia.Formats.N64
                             int ww = (short)reader.ReadInt16();
 
                             doff = reader.ReadInt32();
-                            temp = (int)reader.Position();
+                            temp = (int)reader.Position;
                             if (doff == 0) continue;
 
                             reader.Seek((uint)doff);
@@ -338,7 +340,7 @@ namespace Metanoia.Formats.N64
                             }
 
                             // Read Texture Info At Offset
-                            int tt = (int)reader.Position();
+                            int tt = (int)reader.Position;
                             reader.Seek((uint)texOff);
                             ReadTextureCodes(reader, CurrentMat);
                             reader.Seek((uint)tt);
@@ -402,7 +404,7 @@ namespace Metanoia.Formats.N64
                 switch (reader.ReadByte())
                 {
                     case 0xF5:
-                        reader.Seek(reader.Position() - 1);
+                        reader.Seek(reader.Position - 1);
                         uint b1 = (uint)reader.ReadInt32();
                         uint b2 = (uint)reader.ReadInt32();
 

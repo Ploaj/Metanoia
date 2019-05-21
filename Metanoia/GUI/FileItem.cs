@@ -3,9 +3,8 @@ using System.IO;
 
 namespace Metanoia.GUI
 {
-    public class FileItem
+    public class FileItem : ListViewItem
     {
-        public string Text;
         public string FilePath;
 
         public string Extension { get { return Path.GetExtension(FilePath); } }

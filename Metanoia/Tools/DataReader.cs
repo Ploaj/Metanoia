@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Metanoia
 {
@@ -114,9 +116,13 @@ namespace Metanoia
                 | (exp | mant) << 13), 0);         // value << ( 23 - 10 )
         }
 
-        public uint Position()
+        public uint Position
         {
-            return (uint)BaseStream.Position;
+            get { return (uint)BaseStream.Position; }
+            set
+            {
+                BaseStream.Position = value;
+            }
         }
 
         public void WriteInt32At(int Value, int Position)
@@ -130,7 +136,7 @@ namespace Metanoia
 
         public byte[] GetStreamData()
         {
-            long temp = Position();
+            long temp = Position;
             Seek(0);
             byte[] data = ReadBytes((int)BaseStream.Length);
             Seek((uint)temp);
@@ -139,11 +145,110 @@ namespace Metanoia
 
         public byte[] GetSection(uint Offset, int Size)
         {
-            long temp = Position();
+            long temp = Position;
             Seek(Offset);
             byte[] data = ReadBytes(Size);
             Seek((uint)temp);
             return data;
         }
+
+        internal string ReadString(uint offset, int size)
+        {
+            string str = "";
+
+            var temp = Position;
+            Position = offset;
+
+            if(size == -1)
+            {
+                byte b = ReadByte();
+                while(b != 0)
+                {
+                    str = str + (char)b;
+                    b = ReadByte();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    byte b = ReadByte();
+                    if (b != 0)
+                    {
+                        str = str + (char)b;
+                    }
+                }
+            }
+
+            Position = temp;
+
+            return str;
+        }
+
+        public T[] ReadStructArray<T>(int Size)
+        {
+            T[] arr = new T[Size];
+            for (int i = 0; i < Size; i++)
+            {
+                arr[i] = ReadStruct<T>();
+            }
+            return arr;
+        }
+
+        public T ReadStruct<T>()
+        {
+            byte[] bytes = ReadBytes(Marshal.SizeOf(typeof(T)));
+
+            MaybeAdjustEndianness(typeof(T), bytes);
+
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            handle.Free();
+
+            return theStructure;
+        }
+
+        private void MaybeAdjustEndianness(Type type, byte[] data, int startOffset = 0)
+        {
+            if (!BigEndian)
+            {
+                // nothing to change => return
+                return;
+            }
+
+            foreach (var field in type.GetFields())
+            {
+                var fieldType = field.FieldType;
+                if (field.IsStatic)
+                    // don't process static fields
+                    continue;
+
+                if (fieldType == typeof(string))
+                    // don't swap bytes for strings
+                    continue;
+
+                var offset = Marshal.OffsetOf(type, field.Name).ToInt32();
+
+                // handle enums
+                if (fieldType.IsEnum)
+                    fieldType = Enum.GetUnderlyingType(fieldType);
+
+                // check for sub-fields to recurse if necessary
+                var subFields = fieldType.GetFields().Where(subField => subField.IsStatic == false).ToArray();
+
+                var effectiveOffset = startOffset + offset;
+
+                if (subFields.Length == 0)
+                {
+                    Array.Reverse(data, effectiveOffset, Marshal.SizeOf(fieldType));
+                }
+                else
+                {
+                    // recurse
+                    MaybeAdjustEndianness(fieldType, data, effectiveOffset);
+                }
+            }
+        }
+        
     }
 }

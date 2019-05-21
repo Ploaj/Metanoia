@@ -37,13 +37,14 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.Viewport.BackColor = System.Drawing.Color.Black;
-            this.Viewport.Location = new System.Drawing.Point(3, 3);
+            this.Viewport.Location = new System.Drawing.Point(6, 0);
             this.Viewport.Name = "Viewport";
             this.Viewport.Size = new System.Drawing.Size(428, 356);
             this.Viewport.TabIndex = 0;
             this.Viewport.VSync = false;
             this.Viewport.Load += new System.EventHandler(this.Viewport_Load);
             this.Viewport.Paint += new System.Windows.Forms.PaintEventHandler(this.Viewport_Paint);
+            this.Viewport.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Viewport_MouseMove);
             this.Viewport.Resize += new System.EventHandler(this.Viewport_Resize);
             // 
             // ModelViewer

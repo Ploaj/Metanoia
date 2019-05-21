@@ -46,7 +46,7 @@ namespace Metanoia.Formats.N64
                         vbidindex = (reader.ReadByte() >> 1) - size;
                         int offset = reader.ReadInt32() & 0x1FFFF;
 
-                        uint temp = reader.Position();
+                        uint temp = reader.Position;
                         reader.Seek((uint)offset);
                         for (int v = 0; v < size; v++)
                         {

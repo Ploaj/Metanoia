@@ -54,12 +54,19 @@
     <Compile Include="Exporting\ExportAttribute.cs" />
     <Compile Include="Exporting\ExportSMD.cs" />
     <Compile Include="Formats\FormatAttribute.cs" />
+    <Compile Include="Formats\GameCube\HSF.cs" />
     <Compile Include="Formats\IFileFormat.cs" />
+    <Compile Include="Formats\Misc\Blitz.cs" />
+    <Compile Include="Formats\Misc\BlitzOBE.cs" />
+    <Compile Include="Formats\Misc\Hgof.cs" />
     <Compile Include="Formats\N64\N64Tools.cs" />
     <Compile Include="Formats\PS3\LBP_MOL.cs" />
+    <Compile Include="Modeling\GenericMorph.cs" />
     <Compile Include="Modeling\GenericTexture.cs" />
+    <Compile Include="Rendering\Buffer.cs" />
     <Compile Include="Rendering\GenericRenderer.cs" />
     <Compile Include="Rendering\RenderTexture.cs" />
+    <Compile Include="Rendering\Shader.cs" />
     <Compile Include="Tools\DataReader.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -82,6 +89,9 @@
       <DependentUpon>ModelViewer.cs</DependentUpon>
     </Compile>
     <Compile Include="Tools\Decompress.cs" />
+    <Compile Include="Tools\LibWii\Shared.cs" />
+    <Compile Include="Tools\TLP.cs" />
+    <Compile Include="Tools\TriangleConverter.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -108,9 +118,16 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="Rendering\Shaders\Generic.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Rendering\Shaders\Generic.vert">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
