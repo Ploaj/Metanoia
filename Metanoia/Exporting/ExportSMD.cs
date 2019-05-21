@@ -47,22 +47,24 @@ namespace Metanoia.Exporting
                     var meshIndex = Model.Skeleton.Bones.Count + Model.Meshes.IndexOf(m);
                     m.MakeTriangles();
                     string MaterialName = m.Name;
-                    if(m.Material != null)
+                    if(m.MaterialName != null && Model.MaterialBank.ContainsKey(m.MaterialName))
                     {
-                        if (m.Material.TextureDiffuse != null)
+                        var material = Model.MaterialBank[m.MaterialName];
+                        if (material.TextureDiffuse != null && Model.TextureBank.ContainsKey(material.TextureDiffuse))
                         {
-                            if (TextureBank.ContainsKey(m.Material.TextureDiffuse))
+                            var texture = Model.TextureBank[material.TextureDiffuse];
+                            if (TextureBank.ContainsKey(texture))
                             {
-                                MaterialName = TextureBank[m.Material.TextureDiffuse];
+                                MaterialName = TextureBank[texture];
                             }
                             else
                             {
-                                string TextureName = m.Material.TextureDiffuse.Name.Equals("") ? "Texture_" + TextureBank.Count + ".png" : m.Material.TextureDiffuse.Name + ".png";
+                                string TextureName = texture.Name.Equals("") ? "Texture_" + TextureBank.Count + ".png" : texture.Name + ".png";
                                 Rendering.RenderTexture Temp = new Rendering.RenderTexture();
-                                Temp.LoadGenericTexture(m.Material.TextureDiffuse);
+                                Temp.LoadGenericTexture(texture);
                                 Temp.ExportPNG(new FileInfo(FilePath).Directory.FullName + "/" + TextureName);
                                 Temp.Delete();
-                                TextureBank.Add(m.Material.TextureDiffuse, TextureName);
+                                TextureBank.Add(texture, TextureName);
                                 MaterialName = TextureName;
                             }
                         }

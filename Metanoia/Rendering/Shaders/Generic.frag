@@ -7,6 +7,7 @@ in vec2 UV0;
 uniform mat4 mvp;
 uniform sampler2D dif;
 uniform int hasDif;
+uniform int renderMode;
 
 out vec4 fragColor;
 
@@ -14,7 +15,7 @@ void main()
 {
 	vec2 TexCoord0 = UV0;
 
-	vec3 diffuseColor = vec3(0.5) + (N / 2);
+	vec3 diffuseColor = vec3(1, 0, 0);
 
 	if(hasDif == 1)
 		diffuseColor = texture2D(dif, TexCoord0).xyz;
@@ -27,5 +28,10 @@ void main()
 
 	diffuseColor.xyz *= l;
 
-	fragColor = vec4(diffuseColor, 1);//vec4(, 1);
+	if(renderMode == 0)
+		fragColor = vec4(diffuseColor, 1);
+	else if (renderMode == 1)
+		fragColor = vec4(displayNormal, 1);
+	else if (renderMode == 2)
+		fragColor = vec4(1, 1, 1, 1);
 }

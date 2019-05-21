@@ -72,7 +72,7 @@ namespace Metanoia
 
         private void fileList_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (fileList.SelectedItems[0] == null)
+            if (fileList.SelectedItems.Count == 0 || fileList.SelectedItems[0] == null)
                 return;
 
             if (fileList.SelectedItems[0] is FileItem File)

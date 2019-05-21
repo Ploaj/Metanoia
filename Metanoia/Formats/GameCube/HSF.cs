@@ -154,7 +154,8 @@ namespace Metanoia.Formats.GameCube
             public long Unk4;
             public long Unk5;
             public long Unk6;
-            public long Unk7;
+            public int Unk7;
+            public int MaterialCount;
             public int MaterialIndex;
         }
 
@@ -361,9 +362,11 @@ namespace Metanoia.Formats.GameCube
                 var dataLength =
                     Tools.TPL.textureByteSize((Tools.TPL_TextureFormat)format, texInfo[i].Width, texInfo[i].Height);
                 ;
-                Console.WriteLine((Tools.TPL_TextureFormat)format + " " + dataLength.ToString("X"));
+                Console.WriteLine(textureName + " " + (Tools.TPL_TextureFormat)format + " " + dataLength.ToString("X"));
                 reader.Position = startOffset + texInfo[i].DataOffset;
+
                 var bitmap = Tools.TPL.ConvertFromTextureMelee(reader.ReadBytes(dataLength), texInfo[i].Width, texInfo[i].Height, format, palData, palCount, palFormat);//.Save(textureName + ".png");
+
                 GenericTexture t = new GenericTexture();
                 t.Name = textureName;
                 t.FromBitmap(bitmap);
@@ -511,11 +514,24 @@ namespace Metanoia.Formats.GameCube
         }
 
 
-        private GenericVertex GetVertex(MeshObject mesh, VertexGroup g)
+        private GenericVertex GetVertex(MeshObject mesh, VertexGroup g, GenericSkeleton skeleton)
         {
             // Rigging
             Vector4 boneIndices = new Vector4(mesh.SingleBind, 0, 0, 0);
             Vector4 weight = new Vector4(1, 0, 0, 0);
+
+            var Position = mesh.Positions[g.PositionIndex];
+
+            if(mesh.SingleBind != 0)
+            {
+                // hack TODO: fix
+                var bone = skeleton.Bones.Find(e => e.Name.Equals(mesh.Name));
+                if(bone != null)
+                {
+                    //boneIndices = new Vector4(skeleton.Bones.IndexOf(bone), 0, 0, 0);
+                    //Position += Vector3.TransformPosition(Vector3.Zero, skeleton.GetBoneTransform(bone));
+                }
+            }
             
             foreach(var singleBind in mesh.SingleBinds)
             {
@@ -565,8 +581,8 @@ namespace Metanoia.Formats.GameCube
 
             return new GenericVertex()
             {
-                Pos = mesh.Positions[g.PositionIndex],
-                Nrm = mesh.Normals[g.NormalIndex],
+                Pos = Position,
+                Nrm = mesh.Normals[g.NormalIndex], // TODO: single bind normal
                 UV0 = uv,
                 Bones = boneIndices,
                 Weights = weight
@@ -593,12 +609,22 @@ namespace Metanoia.Formats.GameCube
             GenericModel m = new GenericModel();
             m.Skeleton = skel;
 
+            // Textures
+            foreach (var tex in Textures)
+            {
+                if (m.TextureBank.ContainsKey(tex.Name))
+                {
+                    tex.Name += "_+";
+                }
+                m.TextureBank.Add(tex.Name, tex);
+            }
+
             int index = -1;
             foreach(var meshObject in MeshObjects)
             {
                 index++;
                 Dictionary<int, List<GenericVertex>> MaterialToVertexBank = new Dictionary<int, List<GenericVertex>>();
-
+                //Console.WriteLine($"{meshObject.Key} {skel.Bones[meshObject.Value.SingleBind].Name}");
                 foreach (var d in meshObject.Value.Primitives)
                 {
                     if (!MaterialToVertexBank.ContainsKey(d.Material))
@@ -609,23 +635,23 @@ namespace Metanoia.Formats.GameCube
                     switch (d.PrimitiveType)
                     {
                         case 0x02: // Triangle
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[0]));
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[1]));
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[2]));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[0], skel));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[1], skel));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[2], skel));
                             break;
                         case 0x03: // Quad
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[0]));
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[1]));
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[2]));
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[1]));
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[3]));
-                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[2]));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[0], skel));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[1], skel));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[2], skel));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[1], skel));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[3], skel));
+                            vertices.Add(GetVertex(meshObject.Value, d.Vertices[2], skel));
                             break;
                         case 0x04: // Triangle Strip
                             var verts = new List<GenericVertex>();
                             for (uint t = 0; t < d.Vertices.Length; t++)
                             {
-                                var vert = GetVertex(meshObject.Value, d.Vertices[t]);
+                                var vert = GetVertex(meshObject.Value, d.Vertices[t], skel);
                                 verts.Add(vert);
                             }
                             Tools.TriangleConverter.StripToList(verts, out verts);
@@ -645,22 +671,22 @@ namespace Metanoia.Formats.GameCube
                     if (MaterialToVertexBank.Count > 1)
                         mesh.Name += "_" + Textures[Materials[Materials1[v.Key].MaterialIndex].TextureIndex].Name;
 
-                    mesh.Material = new GenericMaterial();
+                    GenericMaterial mat = new GenericMaterial();
 
-                    try
-                    {
-                        mesh.Material.TextureDiffuse = Textures[Materials[Materials1[v.Key].MaterialIndex].TextureIndex];
+                    mesh.MaterialName = "material_" + m.MaterialBank.Count;
 
-                    }
-                    catch (Exception)
-                    {
+                    m.MaterialBank.Add(mesh.MaterialName, mat);
 
-                    }
+                    var mat1Index = Materials1[v.Key].MaterialIndex;
+                    mat1Index = Math.Min(mat1Index, Materials.Count - 1);
+                    var textureIndex = Materials[mat1Index].TextureIndex;
+                    mat.TextureDiffuse = Textures[textureIndex].Name;
+                        
                     m.Meshes.Add(mesh);
 
                     mesh.Vertices.AddRange(v.Value);
 
-                    Console.WriteLine(mesh.Name + " " + v.Key + " " + Materials[v.Key].TextureIndex + " " + Textures.Count + " " + Materials.Count);
+                    //Console.WriteLine(mesh.Name + " " + v.Key + " " + Materials[v.Key].TextureIndex + " " + Textures.Count + " " + Materials.Count);
 
                     mesh.Optimize();
                 }

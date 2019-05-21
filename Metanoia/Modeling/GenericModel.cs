@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using System.ComponentModel;
 
 namespace Metanoia.Modeling
 {
@@ -20,9 +21,13 @@ namespace Metanoia.Modeling
     {
         public string Name;
 
+        public GenericSkeleton Skeleton { get; set; }
+
         public List<GenericMesh> Meshes = new List<GenericMesh>();
 
-        public GenericSkeleton Skeleton;
+        public Dictionary<string, GenericTexture> TextureBank = new Dictionary<string, GenericTexture>();
+
+        public Dictionary<string, GenericMaterial> MaterialBank = new Dictionary<string, GenericMaterial>();
 
         public bool HasMorphs
         {
@@ -34,20 +39,57 @@ namespace Metanoia.Modeling
                 return false;
             }
         }
+
+        public GenericMaterial GetMaterial(GenericMesh mesh)
+        {
+            if (mesh.MaterialName != null && MaterialBank.ContainsKey(mesh.MaterialName))
+                return MaterialBank[mesh.MaterialName];
+
+            return null;
+        }
+
+        public GenericTexture GetDiffuseTexture(GenericMesh mesh)
+        {
+            var material = GetMaterial(mesh);
+            if (material != null && material.TextureDiffuse != null && TextureBank.ContainsKey(material.TextureDiffuse))
+                return TextureBank[material.TextureDiffuse];
+
+            return null;
+        }
+
+        public GenericTexture GetTexture(GenericMaterial material)
+        {
+            if (material.TextureDiffuse != null && TextureBank.ContainsKey(material.TextureDiffuse))
+                return TextureBank[material.TextureDiffuse];
+
+            return null;
+        }
     }
 
     public class GenericMesh
     {
-        public string Name;
+        [ReadOnly(true), Category("Properties")]
+        public string Name { get; set; }
 
         public List<GenericVertex> Vertices = new List<GenericVertex>();
         public List<uint> Triangles = new List<uint>();
 
         public List<GenericMorph> Morphs = new List<GenericMorph>();
 
+        [ReadOnly(true), Category("Properties")]
         public PrimitiveType PrimitiveType { get; set; } = PrimitiveType.Triangles;
 
-        public GenericMaterial Material;
+        [ReadOnly(true), Category("Properties")]
+        public string MaterialName { get; set; }
+        
+        [ReadOnly(true), Category("Properties")]
+        public int VertexCount { get { return Vertices.Count; } }
+
+        [ReadOnly(true), Category("Properties")]
+        public int TriangleCount { get { return Triangles.Count; } }
+
+        [Category("Rendering")]
+        public bool Visible { get; set; } = true;
 
         public void Optimize()
         {
@@ -98,7 +140,7 @@ namespace Metanoia.Modeling
 
     public class GenericMaterial
     {
-        public GenericTexture TextureDiffuse;
+        public string TextureDiffuse { get; set; }
 
         public TextureWrapMode SWrap { get; set; } = TextureWrapMode.Repeat;
         public TextureWrapMode TWrap { get; set; } = TextureWrapMode.Repeat;

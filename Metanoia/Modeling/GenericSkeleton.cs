@@ -2,6 +2,7 @@
 using OpenTK;
 using System;
 using System.Linq;
+using System.ComponentModel;
 
 namespace Metanoia.Modeling
 {
@@ -98,13 +99,23 @@ namespace Metanoia.Modeling
 
     public class GenericBone
     {
-        public string Name;
+        [ReadOnly(true), Category("Properties")]
+        public string Name { get; set; }
         public int ID;
         public int ParentIndex = -1;
-        public Vector3 Position;
-        public Vector3 Rotation;
-        public Vector3 Scale = Vector3.One;
+        
+        public bool Selected = false;
 
+        [ReadOnly(true), Category("Transforms")]
+        public Vector3 Position { get; set; }
+
+        [ReadOnly(true), Category("Transforms")]
+        public Vector3 Rotation { get; set; }
+
+        [ReadOnly(true), Category("Transforms")]
+        public Vector3 Scale { get; set; } = Vector3.One;
+
+        [Browsable(false)]
         public Quaternion QuaternionRotation {
             get
             {

@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Metanoia.Modeling;
+using Metanoia.GUI;
 
 namespace Metanoia.Rendering
 {
@@ -18,15 +19,14 @@ namespace Metanoia.Rendering
         
         public Matrix4 Translation { get
             {
-                return _translation;
+                return Matrix4.CreateTranslation(_translation);
             }
             set
             {
-                _translation = value;
+                _translation = value.ExtractTranslation();
                 UpdateCamera();
             }
         }
-        private Matrix4 _translation;
 
         private Matrix4 Transform
         {
@@ -35,6 +35,44 @@ namespace Metanoia.Rendering
                 return Matrix4.CreateRotationZ(_rotation.Z) * Matrix4.CreateRotationY(_rotation.Y) * Matrix4.CreateRotationX(_rotation.X);
             }
         }
+
+        public float X
+        {
+            get
+            {
+                return _translation.X;
+            }
+            set
+            {
+                _translation.X = value;
+                UpdateCamera();
+            }
+        }
+        public float Y
+        {
+            get
+            {
+                return _translation.Y;
+            }
+            set
+            {
+                _translation.Y = value;
+                UpdateCamera();
+            }
+        }
+        public float Z
+        {
+            get
+            {
+                return _translation.Z;
+            }
+            set
+            {
+                _translation.Z = value;
+                UpdateCamera();
+            }
+        }
+        private Vector3 _translation = Vector3.Zero;
 
         public float XRotation
         {
@@ -82,9 +120,20 @@ namespace Metanoia.Rendering
             }
         }
 
+        private Vector3 _defaultTranslation = new Vector3(0, -50, -100);
+        private Vector3 _defaultRotation = new Vector3(0, 0, 0);
+
+        private bool ShowBones = true;
+
         public ModelViewer()
         {
             InitializeComponent();
+
+            foreach (var value in Enum.GetValues(typeof(RenderMode)))
+            {
+                renderMode.ComboBox.Items.Add(value);
+            }
+            renderMode.ComboBox.SelectedIndex = 0;
         }
 
         private void UpdateCamera()
@@ -96,14 +145,22 @@ namespace Metanoia.Rendering
         {
             GL.ClearColor(Color.DarkSlateGray);
 
-            Translation = Matrix4.CreateTranslation(0, -50, -100);
+            Translation = Matrix4.CreateTranslation(_defaultTranslation);
 
             GenericRenderer = new GenericRenderer();
+
+            renderMode.ComboBox.SelectedValueChanged += UpdateRenderMode;//.DataBindings.Add("SelectedValue", GenericRenderer, "RenderMode");
+        }
+
+        private void UpdateRenderMode(object sender, EventArgs args)
+        {
+            GenericRenderer.RenderMode = (RenderMode)renderMode.SelectedItem;
+            Viewport.Invalidate();
         }
 
         public void SetModel(GenericModel model)
         {
-            if (model == null)
+            if (model == null )
                 return;
             var min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
             var max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
@@ -126,10 +183,17 @@ namespace Metanoia.Rendering
             var maxY = Math.Max(Math.Abs(min.Y), Math.Abs(max.Y));
             var maxZ = Math.Max(Math.Abs(min.Z), Math.Abs(max.Z));
 
-            Translation = Matrix4.CreateTranslation(0, -center.Y, -maxY * 1.5f);
-            _rotation = Vector3.Zero;
+            if(model.Meshes.Count != 0)
+            {
+                _translation = new Vector3(0, -center.Y, -maxY * 1.5f);
+                _rotation = Vector3.Zero;
+                _defaultTranslation = _translation;
+                _defaultRotation = _rotation;
+                UpdateCamera();
+            }
 
             GenericRenderer.SetGenericModel(model);
+            ModelPanel.SetModel(model);
         }
 
         public void RefreshRender()
@@ -155,7 +219,7 @@ namespace Metanoia.Rendering
 
             RenderFloor();
             
-            GenericRenderer.RenderShader(Camera);
+            GenericRenderer.RenderShader(Camera, ShowBones);
 
             Viewport.SwapBuffers();
         }
@@ -167,6 +231,7 @@ namespace Metanoia.Rendering
             int size = 50;
             int space = 5;
 
+            GL.LineWidth(1f);
             GL.Color3(Color.White);
             GL.Begin(PrimitiveType.Lines);
 
@@ -191,22 +256,70 @@ namespace Metanoia.Rendering
         private void Viewport_Resize(object sender, EventArgs e)
         {
             GL.Viewport(0, 0, Width, Height);
-            Camera = Translation * Transform * Perspective;
+            UpdateCamera();
+            Viewport.Invalidate();
         }
 
         private int PrevX, PrevY;
+
+        private ModelInfoPanel ModelPanel = new ModelInfoPanel();
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            _translation = _defaultTranslation;
+            _rotation = _defaultRotation;
+            UpdateCamera();
+            Viewport.Invalidate();
+        }
+
+        private void toolStripButton2_Click(object sender, EventArgs e)
+        {
+            if (!ModelPanel.Visible)
+            {
+                ModelPanel.Show();
+            }
+        }
+
+        private void showBoneButton_Click(object sender, EventArgs e)
+        {
+            if (ShowBones)
+            {
+                showBoneButton.Image = Properties.Resources.icon_bone_off;
+                ShowBones = false;
+            }
+            else
+            {
+                showBoneButton.Image = Properties.Resources.icon_bone_on;
+                ShowBones = true;
+            }
+            RefreshRender();
+        }
+        
+        private void Viewport_KeyDown(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        {
+            float speed = Vector3.TransformPosition(Vector3.Zero, Camera).LengthFast / 10;
+            if(e.KeyChar == 'w')
+                Z += speed;
+            if (e.KeyChar == 's')
+                Z -= speed;
+            RefreshRender();
+        }
+
         private void Viewport_MouseMove(object sender, MouseEventArgs e)
         {
             if(e.Button == MouseButtons.Left)
             {
                 YRotation -= (PrevX - e.X) / 50f;
-                Viewport.Invalidate();
-
                 XRotation -= (PrevY - e.Y) / 50f;
-                Viewport.Invalidate();
+            }
+            if (e.Button == MouseButtons.Right)
+            {
+                X -= (PrevX - e.X) / 2;
+                Y += (PrevY - e.Y) / 2;
             }
             PrevX = e.X;
             PrevY = e.Y;
+            Viewport.Invalidate();
         }
     }
 }

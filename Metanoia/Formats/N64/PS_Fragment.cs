@@ -197,7 +197,8 @@ namespace Metanoia.Formats.N64
                 reader.Skip(4); // idk
                 int maybeCount = reader.ReadInt32();
 
-                GenericMaterial CurrentMat = new GenericMaterial();
+                string currentMaterialName = "";
+                GenericMaterial currentMaterial = new GenericMaterial();
                 GenericBone CurrentBone = null;
 
                 while (!done)
@@ -275,7 +276,7 @@ namespace Metanoia.Formats.N64
                             else
                                 b.ParentIndex = -1;
                             b.ID = id;
-                            b.Scale = scale;//new Vector3(1, 1, 1);
+                            b.Scale = new Vector3(1, 1, 1); // scale
                             b.Position = trans;
                             b.Rotation = rot;
 
@@ -295,7 +296,7 @@ namespace Metanoia.Formats.N64
                             reader.Seek((uint)doff);
                             {
                                 GenericMesh mesh = DisplayListToGenericMesh(N64Tools.ReadDisplayList(reader, Model.Skeleton.IndexOf(Model.Skeleton.GetBoneByID(w)), Model.Skeleton.GetBoneTransform(Model.Skeleton.GetBoneByID(w))));
-                                mesh.Material = CurrentMat;
+                                mesh.MaterialName = currentMaterialName;
                                 Model.Meshes.Add(mesh);
                             }
                             reader.Seek((uint)temp);
@@ -312,7 +313,7 @@ namespace Metanoia.Formats.N64
                             reader.Seek((uint)doff);
                             {
                                 GenericMesh mesh = DisplayListToGenericMesh(N64Tools.ReadDisplayList(reader, Model.Skeleton.IndexOf(parentBone), Model.Skeleton.GetBoneTransform(parentBone)));
-                                mesh.Material = CurrentMat;
+                                mesh.MaterialName = currentMaterialName;
                                 Model.Meshes.Add(mesh);
                             }
                             reader.Seek((uint)temp);
@@ -329,20 +330,27 @@ namespace Metanoia.Formats.N64
                             //Console.WriteLine("TextureCount " + tid + " " + pid + " " + tidunk + " " + texOfreader.ToString("x"));
                             if (tid != -1)
                             {
-                                CurrentMat = new GenericMaterial();
-                                CurrentMat.TextureDiffuse = BakeTexturePalette(Textures[tid], pid, Palettes);
+                                currentMaterial = new GenericMaterial();
+                                currentMaterialName = "material_" + Model.MaterialBank.Count;
+                                var diffuse = BakeTexturePalette(Textures[tid], pid, Palettes);
+                                diffuse.Name = "texture_" + Model.TextureBank.Count;
+                                currentMaterial.TextureDiffuse = diffuse.Name;
+                                Model.TextureBank.Add(diffuse.Name, diffuse);
+                                Model.MaterialBank.Add(currentMaterialName, currentMaterial);
                             }
                             else
                             {
-                                GenericTexture tem = CurrentMat.TextureDiffuse;
-                                CurrentMat = new GenericMaterial();
-                                CurrentMat.TextureDiffuse = tem;
+                                var currentTexture = currentMaterial.TextureDiffuse;
+                                currentMaterial = new GenericMaterial();
+                                currentMaterialName = "material_" + Model.MaterialBank.Count;
+                                currentMaterial.TextureDiffuse = currentTexture;
+                                Model.MaterialBank.Add(currentMaterialName, currentMaterial);
                             }
 
                             // Read Texture Info At Offset
                             int tt = (int)reader.Position;
                             reader.Seek((uint)texOff);
-                            ReadTextureCodes(reader, CurrentMat);
+                            ReadTextureCodes(reader, currentMaterial);
                             reader.Seek((uint)tt);
                             break; // Texture Binding
                         case 0x24: reader.Skip(3); break; // has to do with matrix popping
@@ -362,18 +370,32 @@ namespace Metanoia.Formats.N64
             // Post Process
 
             // optimized texture sharing
-            Dictionary<byte[], GenericTexture> TextureBank = new Dictionary<byte[], GenericTexture>();
+            Dictionary<string, string> newTexName = new Dictionary<string, string>();
+            Dictionary<string, GenericTexture> newTexBank = new Dictionary<string, GenericTexture>();
+            Dictionary<byte[], string> TextureBank = new Dictionary<byte[], string>();
 
-            foreach (GenericMesh mesh in Model.Meshes)
+            foreach (var tex in Model.TextureBank)
             {
-                if (TextureBank.ContainsKey(mesh.Material.TextureDiffuse.Mipmaps[0]))
+                if (!TextureBank.ContainsKey(tex.Value.Mipmaps[0]))
                 {
-                    mesh.Material.TextureDiffuse = TextureBank[mesh.Material.TextureDiffuse.Mipmaps[0]];
+                    string newName = "texture_" + newTexName.Count;
+                    newTexName.Add(tex.Key, newName);
+                    newTexBank.Add(newName, tex.Value);
+                    TextureBank.Add(tex.Value.Mipmaps[0], newName);
                 }
                 else
                 {
-                    TextureBank.Add(mesh.Material.TextureDiffuse.Mipmaps[0], mesh.Material.TextureDiffuse);
+                    newTexName.Add(tex.Key, TextureBank[tex.Value.Mipmaps[0]]);
                 }
+            }
+
+            Model.TextureBank = newTexBank;
+
+            foreach(var mesh in Model.Meshes)
+            {
+                var material = Model.GetMaterial(mesh);
+                if (material != null)
+                    material.TextureDiffuse = newTexName[material.TextureDiffuse];
             }
 
             Console.WriteLine(TextureBank.Count + " total textures");

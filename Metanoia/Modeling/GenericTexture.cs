@@ -2,20 +2,26 @@
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
+using System.ComponentModel;
 
 namespace Metanoia.Modeling
 {
     public class GenericTexture
     {
-        public string Name;
+        public string Name { get; set; }
+
+        public uint Width { get; set; }
+
+        public uint Height { get; set; }
 
         public int Id;
 
         public List<byte[]> Mipmaps = new List<byte[]>();
 
-        public uint Width { get; set; }
-        public uint Height { get; set; }
+        [Browsable(false)]
         public PixelInternalFormat InternalFormat { get; set; }
+
+        [Browsable(false)]
         public PixelFormat PixelFormat { get; set; }
 
         public void FromBitmap(Bitmap image)

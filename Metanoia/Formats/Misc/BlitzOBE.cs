@@ -366,7 +366,7 @@ namespace Metanoia.Formats.Misc
                 {
                     var mesh = new GenericMesh();
                     mesh.Name = "mesh" + gr.Count.ToString("X");
-                    mesh.Material = new GenericMaterial();
+                    mesh.MaterialName = "material";
 
                     mesh.Vertices = new List<GenericVertex>();
                     mesh.Triangles = new List<uint>();
@@ -424,7 +424,10 @@ namespace Metanoia.Formats.Misc
             Console.WriteLine("Bones: " + MaxBoneIndex + " " + Skeleton.Bones.Count);
             Console.WriteLine("Vertices: " + offset + " " + vertices.Count);
 
-            return new GenericModel() { Skeleton = Skeleton, Meshes = ml };
+            var model = new GenericModel() { Skeleton = Skeleton, Meshes = ml };
+            model.MaterialBank.Add("material", new GenericMaterial());
+
+            return model;
         }
 
         public GenericModel ToGenericModel()

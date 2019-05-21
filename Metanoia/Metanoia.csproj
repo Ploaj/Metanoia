@@ -61,6 +61,12 @@
     <Compile Include="Formats\Misc\Hgof.cs" />
     <Compile Include="Formats\N64\N64Tools.cs" />
     <Compile Include="Formats\PS3\LBP_MOL.cs" />
+    <Compile Include="GUI\ModelInfoPanel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\ModelInfoPanel.Designer.cs">
+      <DependentUpon>ModelInfoPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="Modeling\GenericMorph.cs" />
     <Compile Include="Modeling\GenericTexture.cs" />
     <Compile Include="Rendering\Buffer.cs" />
@@ -95,6 +101,9 @@
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="GUI\ModelInfoPanel.resx">
+      <DependentUpon>ModelInfoPanel.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -103,6 +112,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <EmbeddedResource Include="Rendering\ModelViewer.resx">
       <DependentUpon>ModelViewer.cs</DependentUpon>
@@ -128,6 +138,17 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\icon_view.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_about.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_bone_on.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icon_bone_off.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

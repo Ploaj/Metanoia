@@ -5,8 +5,17 @@ using System.Collections.Generic;
 
 namespace Metanoia.Rendering
 {
+    public enum RenderMode
+    {
+        Textured,
+        Normals,
+        Points
+    }
+
     public class GenericRenderer
     {
+        public RenderMode RenderMode { get; set; }
+
         private Shader GenericShader = null;
         private Buffer VertexBuffer = null;
         private Buffer IndexBuffer = null;
@@ -14,7 +23,7 @@ namespace Metanoia.Rendering
         private GenericSkeleton Skeleton = null;
         private GenericModel Model = null;
 
-        private Dictionary<GenericTexture, RenderTexture> Textures = new Dictionary<GenericTexture, RenderTexture>();
+        private Dictionary<string, RenderTexture> Textures = new Dictionary<string, RenderTexture>();
 
         public void SetGenericModel(GenericModel Model)
         {
@@ -39,18 +48,22 @@ namespace Metanoia.Rendering
 
             LoadBufferData(Model);
 
+            List<string> neededTextures = new List<string>();
+            foreach (var mesh in Model.Meshes)
+                if(Model.GetDiffuseTexture(mesh) != null && !neededTextures.Contains(Model.GetMaterial(mesh).TextureDiffuse))
+                    neededTextures.Add(Model.GetMaterial(mesh).TextureDiffuse);
+
             // load Textures
-            foreach(GenericMesh m in Model.Meshes)
+            foreach(var tex in Model.TextureBank)
             {
-                if (m.Material != null && m.Material.TextureDiffuse != null && !Textures.ContainsKey(m.Material.TextureDiffuse))
-                {
-                    RenderTexture Texture = new RenderTexture();
-                    Texture.LoadGenericTexture(m.Material.TextureDiffuse);
-                    Textures.Add(m.Material.TextureDiffuse, Texture);
-                }
+                RenderTexture Texture = new RenderTexture();
+                Texture.LoadGenericTexture(tex.Value);
+                Textures.Add(tex.Key, Texture);
+                neededTextures.Remove(tex.Key);
             }
 
             System.Console.WriteLine($"Loaded {Textures.Count} Textures");
+            System.Console.WriteLine($"Missing {string.Join(", ", neededTextures)}");
         }
 
         private void LoadBufferData(GenericModel Model)
@@ -84,15 +97,16 @@ namespace Metanoia.Rendering
             Textures.Clear();
         }
 
-        public void RenderShader(Matrix4 MVP)
+        public void RenderShader(Matrix4 MVP, bool renderSkeleton = false)
         {
             if (Model == null) return;
 
             GL.UseProgram(GenericShader.ProgramID);
 
             GL.UniformMatrix4(GenericShader.GetAttributeLocation("mvp"), false, ref MVP);
+            GL.Uniform1(GenericShader.GetAttributeLocation("renderMode"), (int)RenderMode);
             //GL.Uniform3(GenericShader.GetAttributeLocation("cameraPos"), Vector3.TransformPosition(Vector3.Zero, MVP));
-            
+
             VertexBuffer.Bind();
             IndexBuffer.Bind();
 
@@ -111,16 +125,21 @@ namespace Metanoia.Rendering
             int Offset = 0;
             foreach (GenericMesh mesh in Model.Meshes)
             {
-                GL.Uniform1(GenericShader.GetAttributeLocation("hasDif"), 0);
-
-                GL.ActiveTexture(TextureUnit.Texture1);
-                if (mesh.Material.TextureDiffuse != null && Textures.ContainsKey(mesh.Material.TextureDiffuse))
+                if (mesh.Visible)
                 {
-                    Textures[mesh.Material.TextureDiffuse].SetFromMaterial(mesh.Material);
-                    GL.Uniform1(GenericShader.GetAttributeLocation("hasDif"), 1);
+                    GL.Uniform1(GenericShader.GetAttributeLocation("hasDif"), 0);
+
+                    GL.ActiveTexture(TextureUnit.Texture1);
+                    var material = Model.GetMaterial(mesh);
+                    if (material != null && material.TextureDiffuse != null && Textures.ContainsKey(material.TextureDiffuse))
+                    {
+                        Textures[material.TextureDiffuse].SetFromMaterial(Model.GetMaterial(mesh));
+                        GL.Uniform1(GenericShader.GetAttributeLocation("hasDif"), 1);
+                    }
+
+                    GL.DrawElements(RenderMode == RenderMode.Points ? PrimitiveType.Points : mesh.PrimitiveType, mesh.Triangles.Count, DrawElementsType.UnsignedInt, Offset * 4);
+
                 }
-                
-                GL.DrawElements(mesh.PrimitiveType, mesh.Triangles.Count, DrawElementsType.UnsignedInt, Offset * 4);
                 Offset += mesh.Triangles.Count;
             }
 
@@ -131,20 +150,24 @@ namespace Metanoia.Rendering
             GL.UseProgram(0);
 
 
-            if (Skeleton != null)
+            if (renderSkeleton && Skeleton != null)
             {
                 GL.Disable(EnableCap.DepthTest);
 
-                GL.Color3(1f, 0, 0);
-                GL.PointSize(10f);
-                GL.Begin(PrimitiveType.Points);
 
                 foreach (GenericBone bone in Skeleton.Bones)
                 {
+                    GL.Color3(1f, 0, 0);
+                    GL.PointSize(10f);
+                    if (bone.Selected)
+                    {
+                        GL.Color3(0, 1f, 0);
+                        GL.PointSize(20f);
+                    }
+                    GL.Begin(PrimitiveType.Points);
                     GL.Vertex3(Vector3.TransformPosition(Vector3.Zero, Skeleton.GetBoneTransform(bone)));
+                    GL.End();
                 }
-
-                GL.End();
                 
                 GL.LineWidth(2f);
                 GL.Begin(PrimitiveType.Lines);
@@ -164,7 +187,7 @@ namespace Metanoia.Rendering
             }
         }
 
-        public void RenderLegacy()
+        /*public void RenderLegacy()
         {
             GL.Enable(EnableCap.Texture2D);
 
@@ -232,8 +255,8 @@ namespace Metanoia.Rendering
                     GL.Vertex3(Vector3.TransformPosition(Vector3.Zero, Skeleton.GetBoneTransform(Skeleton.Bones[bone.ParentIndex])));
                 }
 
-            GL.End();*/
+            GL.End();
 
-        }
+        }*/
     }
 }

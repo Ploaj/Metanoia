@@ -34,6 +34,8 @@
             this.viewerBox = new System.Windows.Forms.GroupBox();
             this.fileList = new System.Windows.Forms.ListView();
             this.folderTree = new System.Windows.Forms.TreeView();
+            this.splitter1 = new System.Windows.Forms.Splitter();
+            this.splitter2 = new System.Windows.Forms.Splitter();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -43,7 +45,7 @@
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(744, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(804, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -64,25 +66,22 @@
             // 
             // viewerBox
             // 
-            this.viewerBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.viewerBox.Location = new System.Drawing.Point(492, 27);
+            this.viewerBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.viewerBox.Location = new System.Drawing.Point(470, 24);
             this.viewerBox.Name = "viewerBox";
-            this.viewerBox.Size = new System.Drawing.Size(240, 314);
+            this.viewerBox.Size = new System.Drawing.Size(334, 417);
             this.viewerBox.TabIndex = 1;
             this.viewerBox.TabStop = false;
             this.viewerBox.Text = "Viewer";
             // 
             // fileList
             // 
-            this.fileList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.fileList.Location = new System.Drawing.Point(307, 27);
+            this.fileList.Dock = System.Windows.Forms.DockStyle.Left;
+            this.fileList.Location = new System.Drawing.Point(301, 24);
             this.fileList.MultiSelect = false;
             this.fileList.Name = "fileList";
-            this.fileList.Size = new System.Drawing.Size(179, 316);
-            this.fileList.Sorting = System.Windows.Forms.SortOrder.Descending;
+            this.fileList.Size = new System.Drawing.Size(163, 417);
+            this.fileList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.fileList.TabIndex = 2;
             this.fileList.UseCompatibleStateImageBehavior = false;
             this.fileList.View = System.Windows.Forms.View.List;
@@ -90,24 +89,41 @@
             // 
             // folderTree
             // 
-            this.folderTree.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.folderTree.Location = new System.Drawing.Point(0, 27);
+            this.folderTree.Dock = System.Windows.Forms.DockStyle.Left;
+            this.folderTree.Location = new System.Drawing.Point(0, 24);
             this.folderTree.Name = "folderTree";
-            this.folderTree.Size = new System.Drawing.Size(301, 314);
+            this.folderTree.Size = new System.Drawing.Size(295, 417);
             this.folderTree.TabIndex = 3;
             this.folderTree.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.folderTree_BeforeExpand);
             this.folderTree.AfterExpand += new System.Windows.Forms.TreeViewEventHandler(this.folderTree_AfterExpand);
             this.folderTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.folderTree_AfterSelect);
             // 
+            // splitter1
+            // 
+            this.splitter1.Location = new System.Drawing.Point(295, 24);
+            this.splitter1.Name = "splitter1";
+            this.splitter1.Size = new System.Drawing.Size(6, 417);
+            this.splitter1.TabIndex = 4;
+            this.splitter1.TabStop = false;
+            // 
+            // splitter2
+            // 
+            this.splitter2.Location = new System.Drawing.Point(464, 24);
+            this.splitter2.Name = "splitter2";
+            this.splitter2.Size = new System.Drawing.Size(6, 417);
+            this.splitter2.TabIndex = 5;
+            this.splitter2.TabStop = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(744, 353);
-            this.Controls.Add(this.fileList);
-            this.Controls.Add(this.folderTree);
+            this.ClientSize = new System.Drawing.Size(804, 441);
             this.Controls.Add(this.viewerBox);
+            this.Controls.Add(this.splitter2);
+            this.Controls.Add(this.fileList);
+            this.Controls.Add(this.splitter1);
+            this.Controls.Add(this.folderTree);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
@@ -127,6 +143,8 @@
         private System.Windows.Forms.ListView fileList;
         private System.Windows.Forms.TreeView folderTree;
         private System.Windows.Forms.ToolStripMenuItem exportedSelectedToolStripMenuItem;
+        private System.Windows.Forms.Splitter splitter1;
+        private System.Windows.Forms.Splitter splitter2;
     }
 }
 
