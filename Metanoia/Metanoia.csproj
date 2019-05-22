@@ -65,6 +65,7 @@
     <Compile Include="Formats\Misc\Blitz.cs" />
     <Compile Include="Formats\Misc\BlitzOBE.cs" />
     <Compile Include="Formats\Misc\Hgof.cs" />
+    <Compile Include="Formats\Misc\PTE.cs" />
     <Compile Include="Formats\N64\N64Tools.cs" />
     <Compile Include="Formats\PS3\LBP_MOL.cs" />
     <Compile Include="GUI\ModelInfoPanel.cs">

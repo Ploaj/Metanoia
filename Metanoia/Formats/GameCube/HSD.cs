@@ -25,6 +25,8 @@ namespace Metanoia.Formats.GameCube
 
         private Dictionary<byte[], int> tobjToIndex = new Dictionary<byte[], int>();
 
+        private HSD_JOBJ FirstJOBJ = null;
+
         public void Open(byte[] Data)
         {
             var r = new HSDFile();
@@ -37,11 +39,11 @@ namespace Metanoia.Formats.GameCube
 
                 ParseJOBJs(root.Node, null);
 
-                if(root.Node is HSD_JOBJ jobj)
+                if (FirstJOBJ != null && outModel.Meshes.Count == 0)
                 {
-                    List<HSD_JOBJ> BoneList = jobj.DepthFirstList;
+                    List<HSD_JOBJ> BoneList = FirstJOBJ.DepthFirstList;
 
-                    ParseDOBJs(root.Node, null, BoneList);
+                    ParseDOBJs(FirstJOBJ, null, BoneList);
                 }
             }
         }
@@ -51,6 +53,8 @@ namespace Metanoia.Formats.GameCube
             //Debug.WriteLine(node.GetType());
             if(node is HSD_JOBJ jobj)
             {
+                if (FirstJOBJ == null)
+                    FirstJOBJ = jobj;
                 var bone = new GenericBone();
                 bone.Name = "JOBJ_" + skeleton.Bones.Count;
                 jobjToIndex.Add(node, skeleton.Bones.Count);
@@ -58,10 +62,11 @@ namespace Metanoia.Formats.GameCube
                 bone.Position = new Vector3(jobj.Transforms.TX, jobj.Transforms.TY, jobj.Transforms.TZ);
                 bone.Rotation = new Vector3(jobj.Transforms.RX, jobj.Transforms.RY, jobj.Transforms.RZ);
                 bone.Scale = new Vector3(jobj.Transforms.SX, jobj.Transforms.SY, jobj.Transforms.SZ);
-                if(parent != null)
+                if(parent != null && jobjToIndex.ContainsKey(parent))
                     bone.ParentIndex = jobjToIndex[parent];
             }
             
+            if(node != null)
             foreach(var child in node.Children)
                 ParseJOBJs(child, node);
         }
@@ -70,6 +75,7 @@ namespace Metanoia.Formats.GameCube
         {
             if (node is HSD_DOBJ dobj)
             {
+                Console.WriteLine("DOBJ found");
                 GenericMesh mesh = new GenericMesh();
                 mesh.Name = "Mesh_" + outModel.Meshes.Count;
 

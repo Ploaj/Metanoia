@@ -27,18 +27,21 @@ namespace Metanoia.GUI
         {
             treeView1.Nodes.Clear();
             
-            Dictionary<int, TreeNode> indexToBone = new Dictionary<int, TreeNode>();
-            int boneIndex = 0;
-            foreach(var bone in m.Skeleton.Bones)
-                indexToBone.Add(boneIndex++, new TreeNode() { Text = bone.Name, Tag = bone });
-            boneIndex = 0;
-            foreach (var bone in m.Skeleton.Bones)
+            if(m.Skeleton != null)
             {
-                if (bone.ParentIndex == -1)
-                    treeView1.Nodes.Add(indexToBone[boneIndex]);
-                else
-                    indexToBone[bone.ParentIndex].Nodes.Add(indexToBone[boneIndex]);
-                boneIndex++;
+                Dictionary<int, TreeNode> indexToBone = new Dictionary<int, TreeNode>();
+                int boneIndex = 0;
+                foreach (var bone in m.Skeleton.Bones)
+                    indexToBone.Add(boneIndex++, new TreeNode() { Text = bone.Name, Tag = bone });
+                boneIndex = 0;
+                foreach (var bone in m.Skeleton.Bones)
+                {
+                    if (bone.ParentIndex == -1)
+                        treeView1.Nodes.Add(indexToBone[boneIndex]);
+                    else
+                        indexToBone[bone.ParentIndex].Nodes.Add(indexToBone[boneIndex]);
+                    boneIndex++;
+                }
             }
 
             var textureNode = new TreeNode() { Text = "Textures" };
