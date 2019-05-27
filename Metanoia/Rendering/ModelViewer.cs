@@ -160,8 +160,6 @@ namespace Metanoia.Rendering
 
         public void SetModel(GenericModel model)
         {
-            if (model == null )
-                return;
             var min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
             var max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 
@@ -307,15 +305,16 @@ namespace Metanoia.Rendering
 
         private void Viewport_MouseMove(object sender, MouseEventArgs e)
         {
-            if(e.Button == MouseButtons.Left)
+            float speed = Vector3.TransformPosition(Vector3.Zero, Camera).LengthFast / 10;
+            if (e.Button == MouseButtons.Left)
             {
                 YRotation -= (PrevX - e.X) / 50f;
                 XRotation -= (PrevY - e.Y) / 50f;
             }
             if (e.Button == MouseButtons.Right)
             {
-                X -= (PrevX - e.X) / 2;
-                Y += (PrevY - e.Y) / 2;
+                X -= (PrevX - e.X) * speed/2;
+                Y += (PrevY - e.Y) * speed/2;
             }
             PrevX = e.X;
             PrevY = e.Y;

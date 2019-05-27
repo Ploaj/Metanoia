@@ -3,6 +3,8 @@
 in vec3 FragPos;
 in vec3 N;
 in vec2 UV0;
+in vec4 Color;
+in float BoneWeight;
 
 uniform mat4 mvp;
 uniform sampler2D dif;
@@ -33,5 +35,9 @@ void main()
 	else if (renderMode == 1)
 		fragColor = vec4(displayNormal, 1);
 	else if (renderMode == 2)
+		fragColor = vec4(Color.xyz, 1);
+	else if (renderMode == 3)
+		fragColor = vec4(BoneWeight, 0, 0, 1);
+	else if (renderMode == 4)
 		fragColor = vec4(1, 1, 1, 1);
 }

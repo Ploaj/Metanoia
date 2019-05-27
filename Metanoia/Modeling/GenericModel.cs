@@ -104,7 +104,8 @@ namespace Metanoia.Modeling
                 if (!vertices.ContainsKey(v))
                     vertices.Add(v, (uint)vertices.Count);
 
-                Triangles.Add(vertices[v]);
+                if (vertices.ContainsKey(v))
+                    Triangles.Add(vertices[v]);
             }
 
             Vertices.Clear();

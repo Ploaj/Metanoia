@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DivaAlchemy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\DivaAlchemy.dll</HintPath>
+    </Reference>
     <Reference Include="HSDLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>lib\HSDLib.dll</HintPath>
@@ -68,6 +72,7 @@
     <Compile Include="Formats\Misc\PTE.cs" />
     <Compile Include="Formats\N64\N64Tools.cs" />
     <Compile Include="Formats\PS3\LBP_MOL.cs" />
+    <Compile Include="Formats\PSP\IGB.cs" />
     <Compile Include="GUI\ModelInfoPanel.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -158,6 +163,9 @@
     <None Include="Resources\icon_bone_off.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="lib\DivaAlchemy.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="lib\HSDLib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

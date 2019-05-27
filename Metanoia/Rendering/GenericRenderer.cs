@@ -9,6 +9,8 @@ namespace Metanoia.Rendering
     {
         Textured,
         Normals,
+        Colors,
+        BoneWeight,
         Points
     }
 
@@ -107,6 +109,14 @@ namespace Metanoia.Rendering
             GL.Uniform1(GenericShader.GetAttributeLocation("renderMode"), (int)RenderMode);
             //GL.Uniform3(GenericShader.GetAttributeLocation("cameraPos"), Vector3.TransformPosition(Vector3.Zero, MVP));
 
+
+            GL.Uniform1(GenericShader.GetAttributeLocation("selectedBone"), -1);
+            if(RenderMode == RenderMode.BoneWeight)
+            {
+                var bi = Skeleton.Bones.FindIndex(e => e.Selected == true);
+                GL.Uniform1(GenericShader.GetAttributeLocation("selectedBone"), bi);
+            }
+
             VertexBuffer.Bind();
             IndexBuffer.Bind();
 
@@ -118,6 +128,15 @@ namespace Metanoia.Rendering
 
             GL.EnableVertexAttribArray(GenericShader.GetAttributeLocation("uv0"));
             GL.VertexAttribPointer(GenericShader.GetAttributeLocation("uv0"), 2, VertexAttribPointerType.Float, false, GenericVertex.Stride, 24);
+
+            GL.EnableVertexAttribArray(GenericShader.GetAttributeLocation("clr"));
+            GL.VertexAttribPointer(GenericShader.GetAttributeLocation("clr"), 4, VertexAttribPointerType.Float, false, GenericVertex.Stride, 32);
+
+            GL.EnableVertexAttribArray(GenericShader.GetAttributeLocation("bone"));
+            GL.VertexAttribPointer(GenericShader.GetAttributeLocation("bone"), 4, VertexAttribPointerType.Float, false, GenericVertex.Stride, 48);
+
+            GL.EnableVertexAttribArray(GenericShader.GetAttributeLocation("weight"));
+            GL.VertexAttribPointer(GenericShader.GetAttributeLocation("weight"), 4, VertexAttribPointerType.Float, false, GenericVertex.Stride, 64);
 
             GL.Uniform1(GenericShader.GetAttributeLocation("dif"), 1);
 
@@ -146,6 +165,9 @@ namespace Metanoia.Rendering
             GL.DisableVertexAttribArray(GenericShader.GetAttributeLocation("pos"));
             GL.DisableVertexAttribArray(GenericShader.GetAttributeLocation("nrm"));
             GL.DisableVertexAttribArray(GenericShader.GetAttributeLocation("uv0"));
+            GL.DisableVertexAttribArray(GenericShader.GetAttributeLocation("clr"));
+            GL.DisableVertexAttribArray(GenericShader.GetAttributeLocation("bone"));
+            GL.DisableVertexAttribArray(GenericShader.GetAttributeLocation("weight"));
 
             GL.UseProgram(0);
 

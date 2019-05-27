@@ -178,7 +178,9 @@ namespace Metanoia.Formats.GameCube
                 var stringTableOffset = reader.ReadUInt32();
                 var stringTableSize = reader.ReadInt32();
 
-                reader.Position = 0x18;
+                reader.Position = 0x14;
+
+                var flag = reader.ReadInt32();
 
                 var material1TableOffset = reader.ReadUInt32();
                 var material1TableSize = reader.ReadInt32();
@@ -233,11 +235,14 @@ namespace Metanoia.Formats.GameCube
                 ReadPositions(reader, reader.ReadStructArray<AttributeHeader>(positionCount), stringTableOffset);
 
                 reader.Position = normalOffset;
-                ReadNormals(reader, reader.ReadStructArray<AttributeHeader>(normalCount), stringTableOffset);
+                if (flag == 4)
+                    ReadColors(reader, reader.ReadStructArray<AttributeHeader>(normalCount), stringTableOffset);
+                else
+                    ReadNormals(reader, reader.ReadStructArray<AttributeHeader>(normalCount), stringTableOffset);
 
                 reader.Position = uvOffset;
                 ReadUVs(reader, reader.ReadStructArray<AttributeHeader>(uvCount), stringTableOffset);
-                
+
                 ReadTextures(reader, textureOffset, textureCount, paletteOffset, paletteCount, stringTableOffset);
 
                 reader.Position = boneOffset;
@@ -246,7 +251,7 @@ namespace Metanoia.Formats.GameCube
                 uint endOffset = rigOffset + (uint)(rigCount * 0x24);
                 reader.Position = rigOffset;
                 var meshName = MeshObjects.Keys.ToArray();
-                for(int i = 0; i < rigCount; i++)
+                for (int i = 0; i < rigCount; i++)
                 {
                     var mo = MeshObjects[meshName[i]];
                     reader.Position += 4; // 0xCCCCCCCC
@@ -270,23 +275,36 @@ namespace Metanoia.Formats.GameCube
 
                     reader.Position = endOffset + multiBindOffset;
                     mo.MultiBinds.AddRange(reader.ReadStructArray<RiggingMultiBind>(multiBindCount));
-
-                    var weightStart = reader.Position;
                     
+                    if(i != rigCount - 1)
+                        reader.Position = temp;
+                }
+
+                var weightStart = reader.Position;
+                for (int i = 0; i < rigCount; i++)
+                {
+                    var mo = MeshObjects[meshName[i]];
+
                     foreach (var mb in mo.DoubleBinds)
                     {
                         reader.Position = (uint)(weightStart + mb.WeightOffset);
                         mo.DoubleWeights.AddRange(reader.ReadStructArray<RiggingDoubleWeight>(mb.Count));
                     }
+                }
+                
+                weightStart = reader.Position;
+                for (int i = 0; i < rigCount; i++)
+                {
+                    var mo = MeshObjects[meshName[i]];
 
                     foreach (var mb in mo.MultiBinds)
                     {
                         reader.Position = (uint)(weightStart + mb.WeightOffset);
                         mo.MultiWeights.AddRange(reader.ReadStructArray<RiggingMultiWeight>(mb.Count));
                     }
-
-                    reader.Position = temp;
                 }
+
+
             }
         }
 
@@ -439,7 +457,7 @@ namespace Metanoia.Formats.GameCube
             {
                 NodeObject node = new NodeObject();
                 Nodes.Add(node);
-
+                
                 node.Name = reader.ReadString(stringTableOffset + reader.ReadUInt32(), -1);
                 node.Type = reader.ReadInt32();
 
@@ -489,9 +507,26 @@ namespace Metanoia.Formats.GameCube
                 var nrmList = new List<Vector3>();
                 for (int i = 0; i < att.DataCount; i++)
                 {
-                    nrmList.Add(new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
+                    var normal = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+                    nrmList.Add(normal);
                 }
                 MeshObjects[reader.ReadString(stringTableOffset + att.StringOffset, -1)].Normals = nrmList;
+            }
+        }
+
+        private void ReadColors(DataReader reader, AttributeHeader[] headers, uint stringTableOffset)
+        {
+            var startingOffset = reader.Position;
+            foreach (var att in headers)
+            {
+                reader.Position = startingOffset + att.DataOffset;
+
+                var clrList = new List<Vector4>();
+                for (int i = 0; i < att.DataCount; i++)
+                {
+                    clrList.Add(new Vector4(reader.ReadSByte() / (float)sbyte.MaxValue, reader.ReadSByte() / (float)sbyte.MaxValue, reader.ReadSByte() / (float)sbyte.MaxValue, 1));
+                }
+                MeshObjects[reader.ReadString(stringTableOffset + att.StringOffset, -1)].Colors = clrList;
             }
         }
 
@@ -521,17 +556,14 @@ namespace Metanoia.Formats.GameCube
             Vector4 weight = new Vector4(1, 0, 0, 0);
 
             var Position = mesh.Positions[g.PositionIndex];
-
-            if(mesh.SingleBind != 0)
+            
+            var bone = skeleton.Bones.Find(e => e.Name.Equals(mesh.Name));
+            if (bone != null)
             {
-                // hack TODO: fix
-                var bone = skeleton.Bones.Find(e => e.Name.Equals(mesh.Name));
-                if(bone != null)
-                {
-                    //boneIndices = new Vector4(skeleton.Bones.IndexOf(bone), 0, 0, 0);
-                    //Position += Vector3.TransformPosition(Vector3.Zero, skeleton.GetBoneTransform(bone));
-                }
+                boneIndices = new Vector4(skeleton.Bones.IndexOf(bone), 0, 0, 0);
+                Position = Vector3.TransformPosition(Position, skeleton.GetBoneTransform(bone));
             }
+            
             
             foreach(var singleBind in mesh.SingleBinds)
             {
@@ -576,13 +608,23 @@ namespace Metanoia.Formats.GameCube
 
             var uv = Vector2.Zero;
 
+            var Normal = Vector3.Zero;
+            var Color = Vector4.One;
+
+            if (mesh.Normals.Count > 0)
+                Normal = mesh.Normals[g.NormalIndex];
+
+            if (mesh.Colors.Count > 0)
+                Normal = mesh.Colors[g.NormalIndex].Xyz;
+
             if (g.UVIndex > 0 && mesh.UVs.Count > 0)
                 uv = mesh.UVs[g.UVIndex];
 
             return new GenericVertex()
             {
                 Pos = Position,
-                Nrm = mesh.Normals[g.NormalIndex], // TODO: single bind normal
+                Nrm = Normal, // TODO: single bind normal
+                Clr = Color,
                 UV0 = uv,
                 Bones = boneIndices,
                 Weights = weight
@@ -669,7 +711,7 @@ namespace Metanoia.Formats.GameCube
                     GenericMesh mesh = new GenericMesh();
                     mesh.Name = meshObject.Key;
                     if (MaterialToVertexBank.Count > 1)
-                        mesh.Name += "_" + Textures[Materials[Materials1[v.Key].MaterialIndex].TextureIndex].Name;
+                        mesh.Name += "_" + m.Meshes.Count;// Textures[Materials[Materials1[v.Key].MaterialIndex].TextureIndex].Name;
 
                     GenericMaterial mat = new GenericMaterial();
 

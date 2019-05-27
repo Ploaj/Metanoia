@@ -19,10 +19,10 @@ namespace Metanoia.Modeling
         public List<byte[]> Mipmaps = new List<byte[]>();
 
         [Browsable(false)]
-        public PixelInternalFormat InternalFormat { get; set; }
+        public PixelInternalFormat InternalFormat { get; set; } = PixelInternalFormat.Rgba;
 
         [Browsable(false)]
-        public PixelFormat PixelFormat { get; set; }
+        public PixelFormat PixelFormat { get; set; } = PixelFormat.Bgra;
 
         public void FromBitmap(Bitmap image)
         {
