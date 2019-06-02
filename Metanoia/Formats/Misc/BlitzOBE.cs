@@ -155,11 +155,13 @@ namespace Metanoia.Formats.Misc
                             stride = 0x10;
 
                         reader.Position = (uint)(vertexOffset + stride * vertexIndex);
+
                         vertex.Pos = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
                         if (maxBoneWeight == 1)
                         {
                             vertex.Bones = new Vector4(reader.ReadByte(), reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
                             vertex.Weights = new Vector4(1, 0, 0, 0);
+                            //Console.WriteLine(vertex.Bones.ToString());//TODO: I don't understand
                         }
                         else
                         if (maxBoneWeight == 2 || maxBoneWeight == 3 || maxBoneWeight == 4)
@@ -191,7 +193,7 @@ namespace Metanoia.Formats.Misc
 
                     reader.Position = temp;
                 }
-
+                //FixBoneIndices();
             }
             else
             {
@@ -270,7 +272,7 @@ namespace Metanoia.Formats.Misc
 
             reader.Position = offset + 0x130; // 0x120
             uint NameOffset = reader.ReadUInt32();
-            if(NameOffset != 0)
+            if(NameOffset > 0)
                 bone.Name = reader.ReadString(NameOffset, -1);
 
             reader.Position = offset + 0;
@@ -337,7 +339,9 @@ namespace Metanoia.Formats.Misc
                 foreach (var mo in gr)
                 {
                     if (mo.BoneIndices.Length == 0)
+                    {
                         continue;
+                    }
 
                     for (int i = offset; i < offset + mo.VertexCount; i++)
                     {
@@ -365,7 +369,7 @@ namespace Metanoia.Formats.Misc
                 foreach (var mo in gr)
                 {
                     var mesh = new GenericMesh();
-                    mesh.Name = "mesh" + gr.Count.ToString("X");
+                    mesh.Name = "mesh" + ml.Count.ToString("X");
                     mesh.MaterialName = "material";
 
                     mesh.Vertices = new List<GenericVertex>();

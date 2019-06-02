@@ -8,10 +8,12 @@ namespace Metanoia.Modeling
 {
     public struct GenericVertex
     {
-        public const int Stride = (3 + 3 + 2 + 4 + 4 + 4) * 4;
+        public const int Stride = (3 + 3 + 2 + 2 + 2 + 4 + 4 + 4) * 4;
         public Vector3 Pos;
         public Vector3 Nrm;
         public Vector2 UV0;
+        public Vector2 UV1;
+        public Vector2 UV2;
         public Vector4 Clr;
         public Vector4 Bones;
         public Vector4 Weights;

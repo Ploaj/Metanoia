@@ -42,6 +42,9 @@
       <HintPath>lib\HSDLib.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTK.3.0.1\lib\net20\OpenTK.dll</HintPath>
     </Reference>
@@ -61,7 +64,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exporting\DAEWriter.cs" />
     <Compile Include="Exporting\ExportAttribute.cs" />
+    <Compile Include="Exporting\ExportDAE.cs" />
     <Compile Include="Exporting\ExportSMD.cs" />
     <Compile Include="Formats\FormatAttribute.cs" />
     <Compile Include="Formats\GameCube\GXTranslator.cs" />
@@ -72,6 +77,7 @@
     <Compile Include="Formats\Misc\BlitzOBE.cs" />
     <Compile Include="Formats\Misc\Hgof.cs" />
     <Compile Include="Formats\Misc\PTE.cs" />
+    <Compile Include="Formats\Misc\XBOXJson.cs" />
     <Compile Include="Formats\N64\N64Tools.cs" />
     <Compile Include="Formats\PS3\LBP_MOL.cs" />
     <Compile Include="Formats\PSP\IGB.cs" />

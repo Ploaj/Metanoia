@@ -127,11 +127,14 @@ namespace Metanoia
                 {
                     using (SaveFileDialog d = new SaveFileDialog())
                     {
-                        d.Filter = "Source Model (*.smd)|*.smd";
+                        d.Filter = "Supported (*.smd*.dae)|*.smd;*.dae";
 
                         if (d.ShowDialog() == DialogResult.OK)
                         {
-                            Metanoia.Exporting.ExportSMD.Save(d.FileName, Model.ToGenericModel());
+                            if(System.IO.Path.GetExtension(d.FileName) == ".smd")
+                                Metanoia.Exporting.ExportSMD.Save(d.FileName, Model.ToGenericModel());
+                            if (System.IO.Path.GetExtension(d.FileName) == ".dae")
+                                Metanoia.Exporting.ExportDAE.Save(d.FileName, Model.ToGenericModel());
                         }
                     }
                 }

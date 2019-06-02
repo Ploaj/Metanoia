@@ -97,7 +97,7 @@ namespace Metanoia.Exporting
             }
         }
 
-        public static string WriteWeights(GenericVertex v)
+        private static string WriteWeights(GenericVertex v)
         {
             StringBuilder o = new StringBuilder();
 
@@ -129,7 +129,7 @@ namespace Metanoia.Exporting
         }
 
 
-        public static void WriteVTA(string FilePath, GenericModel Model)
+        private static void WriteVTA(string FilePath, GenericModel Model)
         {
 
             using (StreamWriter w = new StreamWriter(new FileStream(FilePath, FileMode.Create)))

@@ -22,7 +22,7 @@ void main()
 	UV0 = uv0;
 	FragPos = (mvp * vec4(pos, 1)).xyz;
 	Color = clr;
-
+	
 	if(bone.x == selectedBone)
 		BoneWeight = weight.x;
 	if(bone.y == selectedBone)
@@ -31,6 +31,8 @@ void main()
 		BoneWeight = weight.z;
 	if(bone.w == selectedBone)
 		BoneWeight = weight.w;
+	//if(weight.x == 0 && weight.y == 0 && weight.z == 0 && weight.w == 0)
+	//	BoneWeight = 1;
 
 	gl_Position = mvp * vec4(pos, 1);
 }

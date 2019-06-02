@@ -111,7 +111,7 @@ namespace Metanoia.Rendering
 
 
             GL.Uniform1(GenericShader.GetAttributeLocation("selectedBone"), -1);
-            if(RenderMode == RenderMode.BoneWeight)
+            if(RenderMode == RenderMode.BoneWeight && Skeleton != null)
             {
                 var bi = Skeleton.Bones.FindIndex(e => e.Selected == true);
                 GL.Uniform1(GenericShader.GetAttributeLocation("selectedBone"), bi);

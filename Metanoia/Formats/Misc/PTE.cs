@@ -104,14 +104,17 @@ namespace Metanoia.Formats.Misc
                                 reader.Position += 3;
                             }
                             break;
-                        case 0x04:
+                        case 0x03: // textures
+                            Console.WriteLine(contentHeader.Indices.Length + " " + contentHeader.Offsets.Length);
+                            break;
+                        case 0x04: // mesh objects
                             polyOff = header[h];
                             break;
-                        case 0x16:
+                        case 0x16: // vertices
                             ReadVertices(reader);
                             break;
                         default:
-                            System.Diagnostics.Debug.WriteLine("Unknown content type " + contentHeader.ContentType.ToString("X"));
+                            System.Diagnostics.Debug.WriteLine("Unknown content type " + contentHeader.ContentType.ToString("X") + " " + reader.Position.ToString("X"));
                             break;
                     }
                 }
