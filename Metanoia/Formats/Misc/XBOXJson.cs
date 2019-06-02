@@ -47,14 +47,26 @@ namespace Metanoia.Formats.Misc
                     foreach(int index in batch.indices)
                     {
                         var vertex = new GenericVertex();
-                        vertex.Pos = new OpenTK.Vector3((float)batch.positions[index * 3 + 0], (float)batch.positions[index * 3 + 1], (float)batch.positions[index * 3 + 2]);
-                        vertex.Nrm = new OpenTK.Vector3((float)batch.normals[index * 3 + 0], (float)batch.normals[index * 3 + 1], (float)batch.normals[index * 3 + 2]);
-                        vertex.UV0 = new OpenTK.Vector2((float)batch.uvs[index * 2 + 0], (float)batch.uvs[index * 2 + 1]);
-                        vertex.UV1 = new OpenTK.Vector2((float)batch.uvs2[index * 2 + 0], (float)batch.uvs2[index * 2 + 1]);
-                        vertex.UV2 = new OpenTK.Vector2((float)batch.uvs3[index * 2 + 0], (float)batch.uvs3[index * 2 + 1]);
-                        vertex.Clr = new OpenTK.Vector4((float)batch.colors[index * 4 + 0] * 255, (float)batch.colors[index * 4 + 1] * 255, (float)batch.colors[index * 4 + 2] * 255, (float)batch.colors[index * 4 + 3] * 255);
-                        vertex.Bones = new OpenTK.Vector4((int)batch.bindings[index * 4 + 0], (int)batch.bindings[index * 4 + 1], (int)batch.bindings[index * 4 + 2], (int)batch.bindings[index * 4 + 3]);
-                        vertex.Weights = new OpenTK.Vector4(((int)batch.weights[index * 4 + 0]) / 255f, ((int)batch.weights[index * 4 + 1]) / 255f, ((int)batch.weights[index * 4 + 2]) / 255f, ((int)batch.weights[index * 4 + 3]) / 255f);
+                        if (((JArray)batch.positions).Count > 0)
+                            vertex.Pos = new OpenTK.Vector3((float)batch.positions[index * 3 + 0], (float)batch.positions[index * 3 + 1], (float)batch.positions[index * 3 + 2]);
+
+                        if (((JArray)batch.normals).Count > 0)
+                            vertex.Nrm = new OpenTK.Vector3((float)batch.normals[index * 3 + 0], (float)batch.normals[index * 3 + 1], (float)batch.normals[index * 3 + 2]);
+
+                        if (((JArray)batch.uvs).Count > 0)
+                            vertex.UV0 = new OpenTK.Vector2((float)batch.uvs[index * 2 + 0], (float)batch.uvs[index * 2 + 1]);
+                        if (((JArray)batch.uvs2).Count > 0)
+                            vertex.UV1 = new OpenTK.Vector2((float)batch.uvs2[index * 2 + 0], (float)batch.uvs2[index * 2 + 1]);
+                        if(((JArray)batch.uvs3).Count > 0)
+                            vertex.UV2 = new OpenTK.Vector2((float)batch.uvs3[index * 2 + 0], (float)batch.uvs3[index * 2 + 1]);
+                        if (((JArray)batch.colors).Count > 0)
+                            vertex.Clr = new OpenTK.Vector4((float)batch.colors[index * 4 + 0] * 255, (float)batch.colors[index * 4 + 1] * 255, (float)batch.colors[index * 4 + 2] * 255, (float)batch.colors[index * 4 + 3] * 255);
+
+                        if (((JArray)batch.bindings).Count > 0)
+                            vertex.Bones = new OpenTK.Vector4((int)batch.bindings[index * 4 + 0], (int)batch.bindings[index * 4 + 1], (int)batch.bindings[index * 4 + 2], (int)batch.bindings[index * 4 + 3]);
+
+                        if (((JArray)batch.weights).Count > 0)
+                            vertex.Weights = new OpenTK.Vector4(((int)batch.weights[index * 4 + 0]) / 255f, ((int)batch.weights[index * 4 + 1]) / 255f, ((int)batch.weights[index * 4 + 2]) / 255f, ((int)batch.weights[index * 4 + 3]) / 255f);
                         mesh.Vertices.Add(vertex);
                     }
 
