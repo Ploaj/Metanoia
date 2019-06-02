@@ -32,5 +32,6 @@ after_build:
   - 7z a "Metanoia.zip" "%APPVEYOR_BUILD_FOLDER%\Metanoia\bin\Release\lib"
   - 7z a "Metanoia.zip" "%APPVEYOR_BUILD_FOLDER%\Metanoia\bin\Release\OpenTK.dll"
   - 7z a "Metanoia.zip" "%APPVEYOR_BUILD_FOLDER%\Metanoia\bin\Release\OpenTK.GLControl.dll"
+  - 7z a "Metanoia.zip" "%APPVEYOR_BUILD_FOLDER%\Metanoia\bin\Release\Newtonsoft.Json.dll"
   - 7z a "Metanoia.zip" "%APPVEYOR_BUILD_FOLDER%\Metanoia\bin\Release\Rendering\Shaders"
   - appveyor PushArtifact "Metanoia.zip"
