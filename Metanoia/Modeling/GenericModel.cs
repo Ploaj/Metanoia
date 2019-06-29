@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.ComponentModel;
+using Metanoia.Tools;
 
 namespace Metanoia.Modeling
 {
@@ -97,6 +98,25 @@ namespace Metanoia.Modeling
         [Category("Rendering")]
         public bool Visible { get; set; } = true;
 
+        private bool CalculatedBounding = false;
+        private Vector4 Bounding = Vector4.Zero;
+
+        public Vector4 GetBounding()
+        {
+            if (!CalculatedBounding)
+            {
+                var positions = new List<Vector3>();
+                foreach(var v in Vertices)
+                {
+                    positions.Add(v.Pos);
+                }
+                Bounding = BoundingSphereGenerator.GenerateBoundingSphere(positions);
+
+                CalculatedBounding = true;
+            }
+            return Bounding;
+        }
+
         public void Optimize()
         {
             MakeTriangles();
@@ -151,5 +171,7 @@ namespace Metanoia.Modeling
 
         public TextureWrapMode SWrap { get; set; } = TextureWrapMode.Repeat;
         public TextureWrapMode TWrap { get; set; } = TextureWrapMode.Repeat;
+
+        public bool EnableBlend = true;
     }
 }

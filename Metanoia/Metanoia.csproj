@@ -102,6 +102,7 @@
     <Compile Include="Rendering\RenderTexture.cs" />
     <Compile Include="Rendering\Shader.cs" />
     <Compile Include="Tools\3DSImageTools.cs" />
+    <Compile Include="Tools\BoundingSphereGenerator.cs" />
     <Compile Include="Tools\CRC32.cs" />
     <Compile Include="Tools\DataReader.cs" />
     <Compile Include="Form1.cs">

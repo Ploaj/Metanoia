@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Metanoia.Modeling;
 using OpenTK;
 using System.Windows.Forms;
+using System.IO;
 
 namespace Metanoia.Exporting
 {
@@ -25,9 +26,10 @@ namespace Metanoia.Exporting
                     foreach (var tex in Model.TextureBank)
                     {
                         TextureNames.Add(tex.Key);
-                        var bmp = tex.Value.GetBitmap();
-                        bmp.Save(path + tex.Key + ".png");
-                        bmp.Dispose();
+                        Rendering.RenderTexture Temp = new Rendering.RenderTexture();
+                        Temp.LoadGenericTexture(tex.Value);
+                        Temp.ExportPNG(new FileInfo(FilePath).Directory.FullName + "/" + tex.Key + ".png");
+                        Temp.Delete();
                     }
 
                     writer.WriteLibraryImages(TextureNames.ToArray(), ".png");

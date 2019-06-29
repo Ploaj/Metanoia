@@ -18,9 +18,12 @@ void main()
 	vec2 TexCoord0 = UV0;
 
 	vec3 diffuseColor = vec3(1, 0, 0);
+	float alpha = 1;
 
-	if(hasDif == 1)
-		diffuseColor = texture2D(dif, TexCoord0).xyz;
+	if(hasDif == 1){
+		diffuseColor = texture2D(dif, TexCoord0, 0).xyz;
+		alpha = texture2D(dif, TexCoord0, 0).a;
+	}
 
 	vec3 lightDir = vec3(0, 0, 1);
 
@@ -30,16 +33,23 @@ void main()
 
 	diffuseColor.xyz *= l;
 
+	if(alpha < 0.8)
+		discard;
+
 	if(renderMode == 0)
-		fragColor = vec4(diffuseColor, 1);
-	else if (renderMode == 1)
-		fragColor = vec4(displayNormal, 1);
+		fragColor = vec4(diffuseColor, alpha);
+	else if (renderMode == 1 && hasDif == 0)
+		fragColor = vec4(1, 0, 0, 1);
+	else if (renderMode == 1 && hasDif == 1)
+		fragColor = texture2D(dif, TexCoord0, 0);
 	else if (renderMode == 2)
-		fragColor = Color;
+		fragColor = vec4(displayNormal, 1);
 	else if (renderMode == 3)
-		fragColor = vec4(UV0.x, 0, UV0.y, 1);
+		fragColor = Color;
 	else if (renderMode == 4)
-		fragColor = vec4(BoneWeight, 0, 0, 1);
+		fragColor = vec4(UV0.x, 0, UV0.y, 1);
 	else if (renderMode == 5)
+		fragColor = vec4(BoneWeight, 0, 0, 1);
+	else if (renderMode == 6)
 		fragColor = vec4(1, 1, 1, 1);
 }

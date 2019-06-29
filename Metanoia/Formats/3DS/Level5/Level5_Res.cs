@@ -16,7 +16,7 @@ namespace Metanoia.Formats._3DS.Level5
         public string ModelName { get; set; }
         Dictionary<uint, string> ResourceNames { get; set; } = new Dictionary<uint, string>();
 
-        public string[] TextureNames;
+        public List<string> TextureNames = new List<string>();
 
         public List<Level5_Material> Materials = new List<Level5_Material>();
 
@@ -33,96 +33,90 @@ namespace Metanoia.Formats._3DS.Level5
             data = Decompress.Level5Decom(data);
             using (DataReader r = new DataReader(new System.IO.MemoryStream(data)))
             {
-                r.Seek(0x3E); // I dunno header stuff
-                int numOfMesh = r.ReadInt16();
+                if (new string(r.ReadChars(6)) != "CHRC00")
+                    throw new FormatException("RES file is corrupt");
 
-                r.Seek(0x12); // I dunno what this is
-                var numOfSomething1 = r.ReadUInt16();
-                r.Skip(0x02);
-                var numOfSomething2 = r.ReadUInt16() * (uint)2;
+                // -----------------------
+                var unknown0 = r.ReadInt16();
+                var stringTableOffset = r.ReadInt16() << 2;
+                var unknown1 = r.ReadInt16();
+                var materialTableOffset = r.ReadInt16() << 2;
+                var materialTableSectionCount = r.ReadInt16();
+                var resourceNodeOffsets = r.ReadInt16() << 2;
+                var resourceNodeCount = r.ReadInt16();
 
-                r.Seek(0x26);
-                int numOfTex = r.ReadInt16();
-                r.Skip(0x06);
-                int numOfMat = r.ReadInt16();
-
-                r.Skip(12);
-                r.Skip(numOfSomething1 * (uint)8);
-                r.Skip(numOfSomething2 * (uint)8);
-
-                // Textures
-                uint[] texcrc = new uint[numOfTex];
-                for (int i = 0; i < numOfTex; i++)
-                {
-                    texcrc[i] = r.ReadUInt32();
-                    r.Skip(16);
-                }
-
-                // Materials
-                Materials = new List<Level5_Material>(numOfMat);
-                for (int i = 0; i < numOfMat; i++)
-                {
-                    var mat = new Level5_Material();
-                    r.Skip(16);
-                    uint c = r.ReadUInt32();
-                    for (int j = 0; j < texcrc.Length; j++)
-                        if (c == texcrc[j])
-                        {
-                            mat.Index = j;
-                            break;
-                        }
-                    r.Skip(0xCC);
-                    Materials.Add(mat);
-                }
-
-                // hacky skip....
-
-                while (true)
-                {
-                    r.ReadInt32();
-                    int i2 = r.ReadInt32();
-                    if (i2 != 0)
-                    {
-                        r.Seek(r.Position - 8);
-                        break;
-                    }
-                }
-
-                for (int i = 0; i < numOfMat; i++)
-                {
-                    Materials[i].Name = r.ReadString();
-                }
-
-                // skip through textures
-                TextureNames = new string[numOfTex];
-                for (int i = 0; i < numOfTex; i++)
-                {
-                    TextureNames[i] = r.ReadString();
-                    if (!ResourceNames.ContainsKey(CRC32.Crc32C(TextureNames[i])))
-                        ResourceNames.Add(CRC32.Crc32C(TextureNames[i]), TextureNames[i]);
-                }
-
-                for (int i = 0; i < numOfMat; i++)
-                {
-                    Materials[i].TexName = TextureNames[Materials[i].Index];
-                }
-
-                for (int i = 0; i < numOfMesh; i++)
-                {
-                    string mname = r.ReadString();
-                    ResourceNames.Add(CRC32.Crc32C(mname), mname);
-                }
-
-                ModelName = r.ReadString(); // model name
-
-                r.ReadString();
-                
+                r.Seek((uint)stringTableOffset);
                 while (r.Position < r.BaseStream.Length)
                 {
                     string mname = r.ReadString();
+                    if (mname == "")
+                        break;
                     if (!ResourceNames.ContainsKey(CRC32.Crc32C(mname)))
                         ResourceNames.Add(CRC32.Crc32C(mname), mname);
                 }
+
+                r.Seek((uint)materialTableOffset);
+                for (int i = 0; i < materialTableSectionCount; i++)
+                {
+                    var offset = r.ReadInt16() << 2;
+                    var count = r.ReadInt16();
+                    var unknown = r.ReadInt16();
+                    var size = r.ReadInt16();
+
+                    if (unknown == 0x270F)
+                        continue;
+
+                    var temp = r.Position;
+                    for(int j = 0; j <count; j++)
+                    {
+                        r.Position = (uint)(offset + j * size);
+                        var key = r.ReadUInt32();
+                        string resourceName = (ResourceNames.ContainsKey(key) ? ResourceNames[key] : key.ToString("X"));
+                        //Console.WriteLine(resourceName + " " + unknown.ToString("X") + " " + size.ToString("X"));
+
+                        if (unknown == 0xF0)
+                        {
+                            TextureNames.Add(resourceName);
+                        }
+                        if (unknown == 0x122)
+                        {
+                            Level5_Material mat = new Level5_Material();
+                            mat.Name = resourceName;
+                            r.Skip(12);
+                            key = r.ReadUInt32();
+                            resourceName = (ResourceNames.ContainsKey(key) ? ResourceNames[key] : key.ToString("X"));
+                            mat.TexName = resourceName;
+                            Console.WriteLine(resourceName + " " + unknown.ToString("X") + " " + size.ToString("X"));
+                            Materials.Add(mat);
+                        }
+                    }
+
+                    r.Seek(temp);
+                }
+
+                r.Seek((uint)resourceNodeOffsets);
+                for (int i = 0; i < resourceNodeCount; i++)
+                {
+                    var offset = r.ReadInt16() << 2;
+                    var count = r.ReadInt16();
+                    var unknown = r.ReadInt16();
+                    var size = r.ReadInt16();
+
+                    if (unknown == 0x270F)
+                        continue;
+
+                    var temp = r.Position;
+                    r.Seek((uint)offset);
+                    for (int j = 0; j < count; j++)
+                    {
+                        var key = r.ReadUInt32();
+                        //Console.WriteLine((ResourceNames.ContainsKey(key) ? ResourceNames[key] : key.ToString("X")) + " " + unknown.ToString("X") + " " + size.ToString("X"));
+                        r.Position += (uint)(size - 4);
+                    }
+
+                    r.Seek(temp);
+                }
+
             }
         }
     }

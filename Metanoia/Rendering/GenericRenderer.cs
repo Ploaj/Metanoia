@@ -2,11 +2,13 @@
 using OpenTK.Graphics.OpenGL;
 using Metanoia.Modeling;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Metanoia.Rendering
 {
     public enum RenderMode
     {
+        Shaded,
         Textured,
         Normals,
         Colors,
@@ -27,6 +29,8 @@ namespace Metanoia.Rendering
         private GenericModel Model = null;
 
         private Dictionary<string, RenderTexture> Textures = new Dictionary<string, RenderTexture>();
+
+        private Dictionary<GenericMesh, int> MeshToOffset = new Dictionary<GenericMesh, int>();
 
         public void SetGenericModel(GenericModel Model)
         {
@@ -71,11 +75,14 @@ namespace Metanoia.Rendering
 
         private void LoadBufferData(GenericModel Model)
         {
+            MeshToOffset.Clear();
             List<GenericVertex> Vertices = new List<GenericVertex>();
             List<int> Indicies = new List<int>();
             int Offset = 0;
             foreach(GenericMesh mesh in Model.Meshes)
             {
+                MeshToOffset.Add(mesh, Indicies.Count);
+
                 Vertices.AddRange(mesh.Vertices);
 
                 foreach(uint i in mesh.Triangles)
@@ -103,6 +110,8 @@ namespace Metanoia.Rendering
         public void RenderShader(Matrix4 MVP, bool renderSkeleton = false)
         {
             if (Model == null) return;
+
+            GL.PushAttrib(AttribMask.AllAttribBits);
 
             GL.UseProgram(GenericShader.ProgramID);
 
@@ -141,9 +150,26 @@ namespace Metanoia.Rendering
 
             GL.Uniform1(GenericShader.GetAttributeLocation("dif"), 1);
 
+            
+            var transparentZSorted = new List<GenericMesh>();
+            var opaqueMesh = new List<GenericMesh>();
+
+            transparentZSorted.AddRange(Model.Meshes);
+
+            transparentZSorted = transparentZSorted.OrderBy(c =>
+            {
+                var v = Vector3.TransformPosition(c.GetBounding().Xyz, MVP);
+                return -(v.Z + c.GetBounding().W);
+            }).ToList();
+
             GL.PointSize(5f);
-            int Offset = 0;
-            foreach (GenericMesh mesh in Model.Meshes)
+
+            GL.Enable(EnableCap.CullFace);
+
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
+
+            foreach (var mesh in transparentZSorted)
             {
                 if (mesh.Visible)
                 {
@@ -157,10 +183,8 @@ namespace Metanoia.Rendering
                         GL.Uniform1(GenericShader.GetAttributeLocation("hasDif"), 1);
                     }
 
-                    GL.DrawElements(RenderMode == RenderMode.Points ? PrimitiveType.Points : mesh.PrimitiveType, mesh.Triangles.Count, DrawElementsType.UnsignedInt, Offset * 4);
-
+                    GL.DrawElements(RenderMode == RenderMode.Points ? PrimitiveType.Points : mesh.PrimitiveType, mesh.Triangles.Count, DrawElementsType.UnsignedInt, MeshToOffset[mesh] * 4);
                 }
-                Offset += mesh.Triangles.Count;
             }
 
             GL.DisableVertexAttribArray(GenericShader.GetAttributeLocation("pos"));
@@ -208,6 +232,8 @@ namespace Metanoia.Rendering
 
                 GL.End();
             }
+
+            GL.PopAttrib();
         }
 
         /*public void RenderLegacy()

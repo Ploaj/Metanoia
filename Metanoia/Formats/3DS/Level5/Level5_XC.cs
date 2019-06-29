@@ -76,9 +76,10 @@ namespace Metanoia.Formats._3DS.Level5
 
             Level5_Resource resourceFile = null;
             var textureList = new List<GenericTexture>();
-
+            
             foreach(var f in Files)
             {
+                Console.WriteLine(f.Key);
                 if (f.Key.EndsWith("RES.bin"))
                 {
                     resourceFile = new Level5_Resource(f.Value);
@@ -91,6 +92,9 @@ namespace Metanoia.Formats._3DS.Level5
                 if (f.Key.EndsWith(".prm"))
                 {
                     model.Meshes.Add(Level5_PRM.ToGenericMesh(f.Value));
+                }
+                if (f.Key.EndsWith(".atr"))
+                {
                 }
                 if (f.Key.EndsWith(".xi"))
                 {

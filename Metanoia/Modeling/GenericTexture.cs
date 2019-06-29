@@ -28,8 +28,11 @@ namespace Metanoia.Modeling
 
         public Bitmap GetBitmap(int mipLevel = 0)
         {
+            if (Id == -1)
+                return null;
             int channels = 4;
             byte[] data = new byte[Width * Height * sizeof(byte) * channels];
+            
             GL.GetTexImage(TextureTarget.Texture2D, mipLevel, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data);
 
             return GetBitmap((int)Width, (int)Height, data);

@@ -68,9 +68,9 @@ namespace Metanoia
         public override string ReadString()
         {
             string str = "";
-            char ch;
-            while ((ch = ReadChar()) != 0)
-                str = str + ch;
+            byte ch;
+            while ((ch = ReadByte()) != 0)
+                str = str + (char)ch;
             return str;
         }
 

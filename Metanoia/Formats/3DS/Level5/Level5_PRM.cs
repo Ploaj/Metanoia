@@ -88,30 +88,37 @@ namespace Metanoia.Formats._3DS.Level5
         private List<uint> ParseIndexBuffer(byte[] buffer)
         {
             List<uint> Indices = new List<uint>();
+            int PrimitiveType = 0;
             int FaceCount = 0;
+            System.IO.File.WriteAllBytes("IndexBuffer.bin", buffer);
             using (DataReader r = new DataReader(new System.IO.MemoryStream(buffer)))
             {
-                r.Seek(0x06);
+                r.Seek(0x04);
+                PrimitiveType = r.ReadInt16();
                 uint faceOffset = r.ReadUInt16();
                 FaceCount = r.ReadInt32();
 
                 buffer = Decompress.Level5Decom(r.GetSection(faceOffset, (int)(r.Length - faceOffset)));
             }
 
+            if (PrimitiveType != 2)
+                throw new NotSupportedException("Primitve Type no implemented");
+
             using (DataReader r = new DataReader(new System.IO.MemoryStream(buffer)))
             {
+                //Console.WriteLine(PrimitiveType + " " + FaceCount + " " + r.BaseStream.Length / 2);
                 r.Seek(0);
                 int f1 = r.ReadInt16();
                 int f2 = r.ReadInt16();
                 int f3;
                 int dir = -1;
                 int startdir = -1;
-                for (int i = 0; i < FaceCount; i++)
+                for (int i = 0; i < FaceCount - 2; i++)
                 {
-                    if (r.Position + 2 > r.Length)
-                        break;
+                    //if (r.Position + 2 > r.Length)
+                    //    break;
                     f3 = r.ReadInt16();
-                    if (f3 == 0xFFFF || f1 == -1)
+                    if (f3 == 0xFFFF || f3 == -1)
                     {
                         f1 = r.ReadInt16();
                         f2 = r.ReadInt16();
@@ -216,8 +223,8 @@ namespace Metanoia.Formats._3DS.Level5
                                 if (NodeTable.Length > 0 && NodeTable.Length != 1)
                                     vert.Bones = new Vector4(NodeTable[(int)vn.X], NodeTable[(int)vn.Y], NodeTable[(int)vn.Z], NodeTable[(int)vn.W]);
                                 break;
-                            case 9: // not sure
-                                //vert.Clr = ReadAttribute(r, AType[j], ACount[j]).Wxyz;
+                            case 9: // Color
+                                vert.Clr = ReadAttribute(r, AType[j], ACount[j]).Yzwx;
                                 break;
                         }
                     }
@@ -231,21 +238,14 @@ namespace Metanoia.Formats._3DS.Level5
 
         public Vector4 ReadAttribute(DataReader f, int type, int count)
         {
-            Vector4 o = new Vector4(1);
+            Vector4 o = new Vector4();
             switch (type)
             {
                 case 0://nothing
-
                     break;
-                case 1:
-                    if (count > 0 && f.Position + 4 < f.Length)
-                        o.X = f.ReadSingle();
-                    if (count > 1 && f.Position + 4 < f.Length)
-                        o.Y = f.ReadSingle();
-                    if (count > 2 && f.Position + 4 < f.Length)
-                        o.Z = f.ReadSingle();
+                case 1: //Vec3
                     break;
-                case 2: //Float
+                case 2: //Vec4
                     if (count > 0 && f.Position + 4 < f.Length)
                         o.X = f.ReadSingle();
                     if (count > 1 && f.Position + 4 < f.Length)

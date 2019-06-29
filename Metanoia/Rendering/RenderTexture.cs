@@ -73,7 +73,7 @@ namespace Metanoia.Rendering
             Height = Texture.Height;
 
             Console.WriteLine(GLID + " " + Texture.Width + " " + Texture.Height + " " + Texture.InternalFormat + " " + Texture.PixelFormat);
-
+            
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
 
