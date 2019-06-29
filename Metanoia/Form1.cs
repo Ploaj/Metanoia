@@ -116,7 +116,7 @@ namespace Metanoia
 
         private void exportedSelectedToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(fileList.SelectedItems[0] is FileItem File)
+            if(fileList.SelectedItems.Count > 0 && fileList.SelectedItems[0] is FileItem File)
             {
                 IFileFormat Node = GetFileFormatFromExtension(File.Extension);
 
@@ -127,11 +127,13 @@ namespace Metanoia
                 {
                     using (SaveFileDialog d = new SaveFileDialog())
                     {
-                        d.Filter = "Supported (*.smd*.dae)|*.smd;*.dae";
+                        d.Filter = "Supported (*.smd*.dae*.obj)|*.smd;*.dae;*.obj";
 
                         if (d.ShowDialog() == DialogResult.OK)
                         {
-                            if(System.IO.Path.GetExtension(d.FileName) == ".smd")
+                            if (System.IO.Path.GetExtension(d.FileName) == ".obj")
+                                Metanoia.Exporting.ExportOBJ.Save(d.FileName, Model.ToGenericModel());
+                            if (System.IO.Path.GetExtension(d.FileName) == ".smd")
                                 Metanoia.Exporting.ExportSMD.Save(d.FileName, Model.ToGenericModel());
                             if (System.IO.Path.GetExtension(d.FileName) == ".dae")
                                 Metanoia.Exporting.ExportDAE.Save(d.FileName, Model.ToGenericModel());

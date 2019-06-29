@@ -1,4 +1,6 @@
-﻿namespace Metanoia.Rendering
+﻿using OpenTK.Graphics;
+
+namespace Metanoia.Rendering
 {
     partial class ModelViewer
     {
@@ -28,16 +30,17 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.Viewport = new OpenTK.GLControl();
+            this.Viewport = new OpenTK.GLControl(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 24, 8, 16));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.renderMode = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.showBoneButton = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -62,6 +65,7 @@
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButton1,
+            this.toolStripButton3,
             this.toolStripSeparator1,
             this.toolStripLabel1,
             this.renderMode,
@@ -74,6 +78,17 @@
             this.toolStrip1.Size = new System.Drawing.Size(434, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripButton1
+            // 
+            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton1.Image = global::Metanoia.Properties.Resources.icon_view;
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton1.Text = "toolStripButton1";
+            this.toolStripButton1.ToolTipText = "Reset View";
+            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // toolStripSeparator1
             // 
@@ -97,21 +112,21 @@
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
+            // showBoneButton
+            // 
+            this.showBoneButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.showBoneButton.Image = global::Metanoia.Properties.Resources.icon_bone_on;
+            this.showBoneButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.showBoneButton.Name = "showBoneButton";
+            this.showBoneButton.Size = new System.Drawing.Size(23, 22);
+            this.showBoneButton.Text = "toolStripButton3";
+            this.showBoneButton.ToolTipText = "Show/Hide Bones";
+            this.showBoneButton.Click += new System.EventHandler(this.showBoneButton_Click);
+            // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripButton1
-            // 
-            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton1.Image = global::Metanoia.Properties.Resources.icon_view;
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton1.Text = "toolStripButton1";
-            this.toolStripButton1.ToolTipText = "Reset View";
-            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // toolStripButton2
             // 
@@ -124,16 +139,14 @@
             this.toolStripButton2.ToolTipText = "Model Information";
             this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
             // 
-            // showBoneButton
+            // toolStripButton3
             // 
-            this.showBoneButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.showBoneButton.Image = global::Metanoia.Properties.Resources.icon_bone_on;
-            this.showBoneButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.showBoneButton.Name = "showBoneButton";
-            this.showBoneButton.Size = new System.Drawing.Size(23, 22);
-            this.showBoneButton.Text = "toolStripButton3";
-            this.showBoneButton.ToolTipText = "Show/Hide Bones";
-            this.showBoneButton.Click += new System.EventHandler(this.showBoneButton_Click);
+            this.toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton3.Name = "toolStripButton3";
+            this.toolStripButton3.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton3.Text = "toolStripButton3";
+            this.toolStripButton3.Click += new System.EventHandler(this.toolStripButton3_Click);
             // 
             // ModelViewer
             // 
@@ -162,5 +175,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripButton showBoneButton;
+        private System.Windows.Forms.ToolStripButton toolStripButton3;
     }
 }

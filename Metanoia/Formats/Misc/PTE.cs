@@ -110,6 +110,15 @@ namespace Metanoia.Formats.Misc
                         case 0x04: // mesh objects
                             polyOff = header[h];
                             break;
+                        case 0x09: // uv buffer
+
+                            break;
+                        case 0x0E: // materials?
+
+                            break;
+                        case 0x0D: // sounds?
+
+                            break;
                         case 0x16: // vertices
                             ReadVertices(reader);
                             break;
@@ -139,6 +148,7 @@ namespace Metanoia.Formats.Misc
             reader.Seek(polyOffset);
             for (int i = 0; i < polyCount; i++)
             {
+                reader.PrintPosition();
                 var polyStruct = reader.ReadStruct<PolyStruct>();
 
                 var mesh = new GenericMesh();
@@ -147,7 +157,7 @@ namespace Metanoia.Formats.Misc
 
                 var temp = reader.Position;
                 reader.Position = (uint)(triangleOffset + 3);
-                //reader.PrintPosition();
+                Console.WriteLine(mesh.Name);
 
                 for (int j = 0; j < polyStruct.FCount; j++)
                 {

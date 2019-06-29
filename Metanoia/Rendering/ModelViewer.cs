@@ -5,6 +5,8 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Metanoia.Modeling;
 using Metanoia.GUI;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace Metanoia.Rendering
 {
@@ -116,7 +118,7 @@ namespace Metanoia.Rendering
         {
             get
             {
-                return Matrix4.CreatePerspectiveFieldOfView(1.2f, Width / (float)Height, 0.1f, 10000);
+                return Matrix4.CreatePerspectiveFieldOfView(1f, Width / (float)Height, 0.1f, 10000);
             }
         }
 
@@ -181,12 +183,18 @@ namespace Metanoia.Rendering
             var maxY = Math.Max(Math.Abs(min.Y), Math.Abs(max.Y));
             var maxZ = Math.Max(Math.Abs(min.Z), Math.Abs(max.Z));
 
+            var radius = Math.Max(maxY, Math.Max(maxX, maxZ));
+
             if(model.Meshes.Count != 0)
             {
                 _translation = new Vector3(0, -center.Y, -maxY * 1.5f);
                 _rotation = Vector3.Zero;
                 _defaultTranslation = _translation;
                 _defaultRotation = _rotation;
+
+                _defaultTranslation = new Vector3(0, -center.Y, -radius * 1.5f);
+                _defaultRotation = new Vector3(0.25f, 0.40f, 0);
+
                 UpdateCamera();
             }
 
@@ -220,6 +228,50 @@ namespace Metanoia.Rendering
             GenericRenderer.RenderShader(Camera, ShowBones);
 
             Viewport.SwapBuffers();
+        }
+
+        private void Render(int width, int height)
+        {
+            GL.PushAttrib(AttribMask.AllAttribBits);
+            // render stuff
+            {
+                GL.Viewport(0, 0, width, height);
+
+                GL.ClearColor(0f, 0f, 0f, 0f);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+                GL.Enable(EnableCap.DepthTest);
+                GL.DepthFunc(DepthFunction.Lequal);
+
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+                GenericRenderer.RenderShader(Camera, false);
+            }
+            GL.PopAttrib();
+
+            Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            {
+                // RGBA unsigned byte
+                int pixelSizeInBytes = sizeof(byte) * 4;
+                int imageSizeInBytes = width * height * pixelSizeInBytes;
+
+                byte[] pixels = new byte[imageSizeInBytes];
+
+                // Read the pixels from the framebuffer. PNG uses the BGRA format. 
+                GL.ReadPixels(0, 0, width, height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
+
+                BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bmp.PixelFormat);
+                Marshal.Copy(pixels, 0, bmpData.Scan0, pixels.Length);
+
+                bmp.UnlockBits(bmpData);
+
+                bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+
+                bmp.Save("Render.png");
+
+                bmp.Dispose();
+            }
         }
 
         private void RenderFloor()
@@ -303,9 +355,15 @@ namespace Metanoia.Rendering
             RefreshRender();
         }
 
+        private void toolStripButton3_Click(object sender, EventArgs e)
+        {
+            Render(Viewport.Width, Viewport.Height);
+        }
+
         private void Viewport_MouseMove(object sender, MouseEventArgs e)
         {
-            float speed = Vector3.TransformPosition(Vector3.Zero, Camera).LengthFast / 10;
+            float speed = 1 / Vector3.TransformPosition(Vector3.Zero, Camera).LengthFast;
+            speed = (1 - speed) * 1;
             if (e.Button == MouseButtons.Left)
             {
                 YRotation -= (PrevX - e.X) / 50f;
@@ -313,12 +371,16 @@ namespace Metanoia.Rendering
             }
             if (e.Button == MouseButtons.Right)
             {
-                X -= (PrevX - e.X) * speed/2;
-                Y += (PrevY - e.Y) * speed/2;
+                X -= (PrevX - e.X) * speed;
+                Y += (PrevY - e.Y) * speed;
             }
             PrevX = e.X;
             PrevY = e.Y;
             Viewport.Invalidate();
         }
+
+        // FrameViewport
+        // MakeRender
+        
     }
 }

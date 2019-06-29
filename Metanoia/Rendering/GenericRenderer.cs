@@ -10,6 +10,7 @@ namespace Metanoia.Rendering
         Textured,
         Normals,
         Colors,
+        UV0,
         BoneWeight,
         Points
     }
@@ -129,8 +130,8 @@ namespace Metanoia.Rendering
             GL.EnableVertexAttribArray(GenericShader.GetAttributeLocation("uv0"));
             GL.VertexAttribPointer(GenericShader.GetAttributeLocation("uv0"), 2, VertexAttribPointerType.Float, false, GenericVertex.Stride, 24);
 
-            GL.EnableVertexAttribArray(GenericShader.GetAttributeLocation("clr"));
-            GL.VertexAttribPointer(GenericShader.GetAttributeLocation("clr"), 4, VertexAttribPointerType.Float, false, GenericVertex.Stride, 32);
+            GL.EnableVertexAttribArray(GenericShader.GetAttributeLocation("clr0"));
+            GL.VertexAttribPointer(GenericShader.GetAttributeLocation("clr0"), 4, VertexAttribPointerType.Float, false, GenericVertex.Stride, 32);
 
             GL.EnableVertexAttribArray(GenericShader.GetAttributeLocation("bone"));
             GL.VertexAttribPointer(GenericShader.GetAttributeLocation("bone"), 4, VertexAttribPointerType.Float, false, GenericVertex.Stride, 48);

@@ -12,6 +12,8 @@ namespace Metanoia
     {
         public bool BigEndian { get; set; } = false;
 
+        public long Length { get => BaseStream.Length; }
+
         public DataReader(Stream input) : base(input)
         {
         }
@@ -207,7 +209,48 @@ namespace Metanoia
 
             return theStructure;
         }
+        
+        private int bitPosition = 0;
 
+        private byte Peek()
+        {
+            byte b = ReadByte();
+            BaseStream.Position -= 1;
+            return b;
+        }
+
+        public int ReadBits(int bitCount)
+        {
+            byte b = Peek();
+            int value = 0;
+            int LE = 0;
+            int bitIndex = 0;
+            for (int i = 0; i < bitCount; i++)
+            {
+                byte bit = (byte)((b & (0x1 << (bitPosition))) >> (bitPosition));
+                value |= (bit << (LE + bitIndex));
+                bitPosition++;
+                bitIndex++;
+                if (bitPosition >= 8)
+                {
+                    bitPosition = 0;
+                    b = ReadByte();
+                    b = Peek();
+                }
+                if (bitIndex >= 8)
+                {
+                    bitIndex = 0;
+                    if (LE + 8 > bitCount)
+                    {
+                        LE = bitCount - 1;
+                    }
+                    else
+                        LE += 8;
+                }
+            }
+
+            return value;
+        }
         private void MaybeAdjustEndianness(Type type, byte[] data, int startOffset = 0)
         {
             if (!BigEndian)

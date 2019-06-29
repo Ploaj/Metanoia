@@ -18,6 +18,35 @@ namespace Metanoia.Modeling
 
         public RotationOrder RotationOrder = RotationOrder.XYZ;
 
+        public GenericBone[] BreathFirst
+        {
+            get
+            {
+                List<GenericBone> bones = new List<GenericBone>();
+
+                foreach(var b in Bones)
+                {
+                    if(b.ParentIndex == -1)
+                    {
+                        GetBreathFirst(b, bones);
+                    }
+                }
+
+                return bones.ToArray();
+            }
+        }
+
+        private void GetBreathFirst(GenericBone bone, List<GenericBone> bones)
+        {
+            bones.Add(bone);
+
+            var index = Bones.IndexOf(bone);
+            foreach(var v in Bones.FindAll(e=>e.ParentIndex == index))
+            {
+                GetBreathFirst(v, bones);
+            }
+        }
+
         public Matrix4 GetWorldTransform(int BoneIndex)
         {
             if (BoneIndex > Bones.Count || BoneIndex < 0) return Matrix4.Identity;

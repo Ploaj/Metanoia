@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenTK.Graphics.OpenGL;
 using System.Drawing;
 using System.ComponentModel;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using OpenTK.Graphics.OpenGL;
 
 namespace Metanoia.Modeling
 {
@@ -22,7 +24,27 @@ namespace Metanoia.Modeling
         public PixelInternalFormat InternalFormat { get; set; } = PixelInternalFormat.Rgba;
 
         [Browsable(false)]
-        public PixelFormat PixelFormat { get; set; } = PixelFormat.Bgra;
+        public OpenTK.Graphics.OpenGL.PixelFormat PixelFormat { get; set; } = OpenTK.Graphics.OpenGL.PixelFormat.Bgra;
+
+        public Bitmap GetBitmap(int mipLevel = 0)
+        {
+            int channels = 4;
+            byte[] data = new byte[Width * Height * sizeof(byte) * channels];
+            GL.GetTexImage(TextureTarget.Texture2D, mipLevel, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data);
+
+            return GetBitmap((int)Width, (int)Height, data);
+        }
+
+        public static Bitmap GetBitmap(int width, int height, byte[] imageData)
+        {
+            Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bmp.PixelFormat);
+            Marshal.Copy(imageData, 0, bmpData.Scan0, imageData.Length);
+
+            bmp.UnlockBits(bmpData);
+            return bmp;
+        }
 
         public void FromBitmap(Bitmap image)
         {
@@ -30,16 +52,16 @@ namespace Metanoia.Modeling
             Height = (uint)image.Height;
 
             InternalFormat = PixelInternalFormat.Rgba;
-            PixelFormat = PixelFormat.Bgra;
+            PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat.Bgra;
 
-            System.Drawing.Imaging.BitmapData bData = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
-                System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            BitmapData bData = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
+               ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
             int size = bData.Stride * bData.Height;
             
             byte[] data = new byte[size];
             
-            System.Runtime.InteropServices.Marshal.Copy(bData.Scan0, data, 0, size);
+            Marshal.Copy(bData.Scan0, data, 0, size);
 
             Mipmaps.Add(data);
 

@@ -73,10 +73,14 @@ namespace Metanoia.Modeling
         [ReadOnly(true), Category("Properties")]
         public string Name { get; set; }
 
-        public List<GenericVertex> Vertices = new List<GenericVertex>();
+        [ReadOnly(true), Category("Data")]
+        public List<GenericVertex> Vertices { get; set; } = new List<GenericVertex>();
+
+        [ReadOnly(true), Category("Data")]
         public List<uint> Triangles = new List<uint>();
 
-        public List<GenericMorph> Morphs = new List<GenericMorph>();
+        [ReadOnly(true), Category("Data")]
+        public List<GenericMorph> Morphs { get; set; } = new List<GenericMorph>();
 
         [ReadOnly(true), Category("Properties")]
         public PrimitiveType PrimitiveType { get; set; } = PrimitiveType.Triangles;

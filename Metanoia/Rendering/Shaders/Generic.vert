@@ -3,7 +3,7 @@
 in vec3 pos;
 in vec3 nrm;
 in vec2 uv0;
-in vec4 clr;
+in vec4 clr0;
 in vec4 bone;
 in vec4 weight;
 
@@ -21,7 +21,7 @@ void main()
 	N = nrm;//normalize((inverse(transpose(mvp)) * vec4(nrm, 1)).xyz);
 	UV0 = uv0;
 	FragPos = (mvp * vec4(pos, 1)).xyz;
-	Color = clr;
+	Color = clr0;
 	
 	if(bone.x == selectedBone)
 		BoneWeight = weight.x;

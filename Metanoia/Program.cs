@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Metanoia
@@ -16,6 +16,7 @@ namespace Metanoia
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
             Application.Run(new MainForm());
         }
     }

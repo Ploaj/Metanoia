@@ -27,7 +27,6 @@ namespace Metanoia.Exporting
         {
             public string Name;
             public int Parent = -1;
-            public string ParentName;
             public float[] Transform;
             public float[] BindPose;
         }
@@ -70,7 +69,7 @@ namespace Metanoia.Exporting
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string GetUniqueID(string id)
+        private string GetUniqueID(string id)
         {
             if (UsedIDs.ContainsKey(id))
             {
@@ -104,7 +103,7 @@ namespace Metanoia.Exporting
         }
 
 
-        public void WriteLibraryImages(string[] TextureNames = null)
+        public void WriteLibraryImages(string[] TextureNames = null, string extension = ".png")
         {
             writer.WriteStartElement("library_images");
             if (TextureNames != null)
@@ -114,7 +113,7 @@ namespace Metanoia.Exporting
                     writer.WriteStartElement("image");
                     writer.WriteAttributeString("id", tn);
                     writer.WriteStartElement("init_from");
-                    writer.WriteString(tn + ".png");
+                    writer.WriteString(tn + extension);
                     writer.WriteEndElement();
                     writer.WriteEndElement();
                 }
@@ -347,7 +346,7 @@ namespace Metanoia.Exporting
             if (Semantic == VERTEX_SEMANTIC.COLOR)
                 Stride = 4;
 
-            if (Optimize)
+            if (Optimize && Semantic != VERTEX_SEMANTIC.POSITION)
                 OptimizeSource(Values, Indices, Stride, out Values, out Indices);
 
             string sourceid = GetUniqueID(Name + "-" + Semantic.ToString().ToLower());
@@ -523,10 +522,13 @@ namespace Metanoia.Exporting
 
             writer.WriteStartElement("matrix");
             writer.WriteAttributeString("sid", "transform");
-            writer.WriteString(string.Join(" ", joint.Transform));
+            StringBuilder mat = new StringBuilder();
+            foreach (var v in joint.Transform)
+                mat.Append(v.ToString("0.####") + " ");
+            writer.WriteString(mat.ToString());
             writer.WriteEndElement();
 
-            foreach (var child in Joints.FindAll(e => e.Parent == Joints.IndexOf(joint)))
+            foreach (var child in GetChildren(joint))
             {
                 RecursivlyWriteJoints(child);
             }
@@ -534,10 +536,22 @@ namespace Metanoia.Exporting
             writer.WriteEndElement();
         }
 
+        private JOINT[] GetChildren(JOINT j)
+        {
+            int parentindex = Joints.IndexOf(j);
+            List<JOINT> Children = new List<JOINT>();
+            foreach (var child in Joints)
+            {
+                if (child.Parent == parentindex)
+                    Children.Add(child);
+            }
+            return Children.ToArray();
+        }
+
         /// <summary>
         /// Starts the library controller section
         /// </summary>
-        private void BeginLibraryControllers()
+        public void BeginLibraryControllers()
         {
             writer.WriteStartElement("library_controllers");
         }
@@ -567,42 +581,13 @@ namespace Metanoia.Exporting
             j.Name = name;
             j.Transform = Transform;
             j.BindPose = InvWorldTransform;
-            j.ParentName = parentName;
-
             foreach (var joint in Joints)
-            {
-                if (joint.ParentName.Equals(name))
-                    joint.Parent = Joints.Count;
                 if (joint.Name.Equals(parentName))
                     j.Parent = Joints.IndexOf(joint);
-            }
             Joints.Add(j);
         }
 
-        private Dictionary<JOINT, int> ReorderJoints()
-        {
-            Dictionary<JOINT, int> newJointList = new Dictionary<JOINT, int>();
-
-            foreach(var root in Joints.FindAll(e => e.Parent == -1))
-            {
-                RecursivlyReorderJoints(root, ref newJointList);
-            }
-
-
-            return newJointList;
-        }
-
-        private void RecursivlyReorderJoints(JOINT joint, ref Dictionary<JOINT, int> newJointList)
-        {
-            newJointList.Add(joint, newJointList.Count);
-
-            foreach (var child in Joints.FindAll(e => e.Parent == Joints.IndexOf(joint)))
-            {
-                RecursivlyReorderJoints(child, ref newJointList);
-            }
-        }
-
-        private void WriteLibraryController(string Name)
+        public void WriteLibraryController(string Name)
         {
             if (!GeometryControllers.ContainsKey(Name)) return;
 
@@ -620,18 +605,15 @@ namespace Metanoia.Exporting
                 writer.WriteString("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1");
                 writer.WriteEndElement();
 
-                var ReorderedJoints = ReorderJoints();
                 object[] BoneNames = new string[Joints.Count];
                 object[] InvBinds = new object[Joints.Count * 16];
-                int boneIndex = 0;
-                foreach(var joint in ReorderedJoints)
+                for (int i = 0; i < BoneNames.Length; i++)
                 {
-                    BoneNames[boneIndex] = joint.Key.Name;
+                    BoneNames[i] = Joints[i].Name;
                     for (int j = 0; j < 16; j++)
                     {
-                        InvBinds[boneIndex * 16 + j] = joint.Key.BindPose[j];
+                        InvBinds[i * 16 + j] = Joints[i].BindPose[j];
                     }
-                    boneIndex++;
                 }
                 var Weights = new List<object>();
                 var WeightIndices = new List<int>();
@@ -709,7 +691,7 @@ namespace Metanoia.Exporting
         /// <param name="Semantic"></param>
         /// <param name="Values"></param>
         /// <returns>the id of the newly created skin source</returns>
-        private string WriteSkinSource(string Name, SKIN_SEMANTIC Semantic, object[] Values)
+        public string WriteSkinSource(string Name, SKIN_SEMANTIC Semantic, object[] Values)
         {
             int Stride = 0;
             switch (Semantic)
@@ -733,7 +715,14 @@ namespace Metanoia.Exporting
             string FloatArrayID = GetUniqueID(Name + "-" + Semantic.ToString().ToLower() + "-array");
             writer.WriteAttributeString("id", FloatArrayID);
             writer.WriteAttributeString("count", Values.Length.ToString());
-            writer.WriteString(string.Join(" ", Values));
+            if(Semantic == SKIN_SEMANTIC.INV_BIND_MATRIX || Semantic == SKIN_SEMANTIC.WEIGHT)
+            {
+                StringBuilder mat = new StringBuilder();
+                foreach (float v in Values)
+                    mat.Append(v.ToString("0.####") + " ");
+                writer.WriteString(mat.ToString());
+            }else
+                writer.WriteString(string.Join(" ", Values));
             writer.WriteEndElement();
 
             writer.WriteStartElement("technique_common");
@@ -766,7 +755,7 @@ namespace Metanoia.Exporting
         /// <summary>
         /// Ends the Library Controller Section
         /// </summary>
-        private void EndLibraryControllers()
+        public void EndLibraryControllers()
         {
             writer.WriteEndElement();
         }
@@ -774,7 +763,7 @@ namespace Metanoia.Exporting
         /// <summary>
         /// Begins the visual scene section
         /// </summary>
-        private void BeginVisualNodeSection()
+        public void BeginVisualNodeSection()
         {
             writer.WriteStartElement("library_visual_scenes");
             writer.WriteStartElement("visual_scene");
@@ -785,7 +774,7 @@ namespace Metanoia.Exporting
         /// <summary>
         /// Automatically creates and appends the visual node section
         /// </summary>
-        private void CreateVisualNodeSection()
+        public void CreateVisualNodeSection()
         {
             BeginVisualNodeSection();
             writer.WriteStartElement("node");
@@ -798,10 +787,9 @@ namespace Metanoia.Exporting
             writer.WriteString("1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1");
             writer.WriteEndElement();
 
-            foreach (var root in Joints.FindAll(e => e.Parent == -1))
-            {
-                    RecursivlyWriteJoints(root);
-                }
+            foreach (var joint in Joints)
+                if (joint.Parent == -1)
+                    RecursivlyWriteJoints(joint);
 
             writer.WriteEndElement();
 
@@ -828,7 +816,7 @@ namespace Metanoia.Exporting
                         writer.WriteStartElement("instance_controller");
                         writer.WriteAttributeString("url", $"#{m.Value}");
                         writer.WriteStartElement("skeleton");
-                        writer.WriteString("#Armature_" + Joints.Find(e=>e.Parent == -1).Name);
+                        writer.WriteString("#Armature_" + Joints[0].Name);
                         writer.WriteEndElement();
                         if (MeshIdToMaterial.ContainsKey(m.Key))
                         {
@@ -853,12 +841,12 @@ namespace Metanoia.Exporting
             EndVisualNodeSection();
         }
 
-        private void WriteJoint()
+        public void WriteJoint()
         {
 
         }
 
-        private void WriteNode(string Name)
+        public void WriteNode(string Name)
         {
             writer.WriteStartElement("node");
             writer.WriteAttributeString("id", Name);
@@ -870,7 +858,7 @@ namespace Metanoia.Exporting
         /// <summary>
         /// ends the visual scene section
         /// </summary>
-        private void EndVisualNodeSection()
+        public void EndVisualNodeSection()
         {
             writer.WriteEndElement();
             writer.WriteEndElement();
