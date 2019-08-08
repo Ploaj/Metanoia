@@ -16,9 +16,9 @@ namespace Metanoia.Formats.Unity
     {
         private UnityMesh Mesh = new UnityMesh();
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
-            using (DataReader reader = new DataReader(new MemoryStream(Data)))
+            using (DataReader reader = new DataReader(new FileStream(File.FilePath, FileMode.Open)))
             {
                 Mesh.Parse(reader);
             }

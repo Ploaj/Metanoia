@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL;
+using Metanoia.Rendering;
 
 namespace Metanoia.Modeling
 {

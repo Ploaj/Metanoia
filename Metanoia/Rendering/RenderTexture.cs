@@ -4,6 +4,7 @@ using OpenTK.Graphics.OpenGL;
 using Metanoia.Modeling;
 using System.Drawing.Imaging;
 using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace Metanoia.Rendering
 {
@@ -38,23 +39,19 @@ namespace Metanoia.Rendering
 
         public void ExportPNG(string FileName)
         {
-            int fb;
-            GL.GenFramebuffers(1, out fb);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, fb);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, GLID, 0);
-
+            int channels = 4;
+            byte[] pixels = new byte[(int)(Width * Height * sizeof(byte) * channels)];
+            GL.GetTexImage(TextureTarget.Texture2D, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
+            
             Bitmap b = new Bitmap((int)Width, (int)Height);
             BitmapData data = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            GL.ReadPixels(0, 0, (int)Width, (int)Height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
 
+            Marshal.Copy(pixels, 0, data.Scan0, pixels.Length);
+            
             b.UnlockBits(data);
 
             b.Save(FileName);
             b.Dispose();
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.DeleteFramebuffer(fb);
         }
 
         public void LoadGenericTexture(GenericTexture Texture)
@@ -67,7 +64,16 @@ namespace Metanoia.Rendering
             if (Texture.InternalFormat == PixelInternalFormat.Rgb5A1)
                 PixelType = PixelType.UnsignedShort5551;
 
-            GL.TexImage2D(TextureTarget.Texture2D, 0, Texture.InternalFormat, (int)Texture.Width, (int)Texture.Height, 0, Texture.PixelFormat, PixelType, Texture.Mipmaps[0]);
+            if(Texture.InternalFormat == PixelInternalFormat.CompressedRgbS3tcDxt1Ext
+                || Texture.InternalFormat == PixelInternalFormat.CompressedRgbaS3tcDxt5Ext)
+            {
+                GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, (InternalFormat)Texture.InternalFormat, (int)Texture.Width, (int)Texture.Height, 0, Texture.Mipmaps[0].Length, Texture.Mipmaps[0]);
+                Console.WriteLine(GL.GetError() + " " + Texture.Mipmaps[0].Length.ToString("X"));
+            }
+            else
+            {
+                GL.TexImage2D(TextureTarget.Texture2D, 0, Texture.InternalFormat, (int)Texture.Width, (int)Texture.Height, 0, Texture.PixelFormat, PixelType, Texture.Mipmaps[0]);
+            }
 
             Width = Texture.Width;
             Height = Texture.Height;

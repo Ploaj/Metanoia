@@ -14,7 +14,20 @@ namespace Metanoia
 
         public long Length { get => BaseStream.Length; }
 
+        public DataReader(byte[] data) : base(new MemoryStream(data))
+        {
+
+        }
+
         public DataReader(Stream input) : base(input)
+        {
+        }
+
+        public DataReader(string path) : base(new FileStream(path, FileMode.Open))
+        {
+        }
+
+        public DataReader(FileItem item) : base(new FileStream(item.FilePath, FileMode.Open))
         {
         }
 
@@ -134,6 +147,14 @@ namespace Metanoia
             BaseStream.Position = Position;
             BaseStream.Write(data, 0, data.Length);
             BaseStream.Position = temp;
+        }
+
+        public void Align(int alignment)
+        {
+            if(Position % alignment != 0)
+            {
+                Position += (uint)(alignment-(Position % alignment));
+            }
         }
 
         public byte[] GetStreamData()

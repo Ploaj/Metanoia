@@ -87,30 +87,29 @@ namespace Metanoia.Modeling
         {
             foreach(var root in GetRoots())
             {
-                BoneWorldToRelativeTransform(root, null);
+                BoneWorldToRelativeTransform(root);
             }
         }
 
-        private void BoneWorldToRelativeTransform(GenericBone b, GenericBone parent)
+        private void BoneWorldToRelativeTransform(GenericBone b)
         {
-            if (parent != null)
+            if(b.ParentIndex != -1)
             {
-                Console.WriteLine(b.Name + " " + parent.Name);
-                Matrix4 worldT = b.Transform;
-                Matrix4 parentT = GetBoneTransform(parent);
-                parentT.Invert();
+                //Console.WriteLine(b.Name + " " + parent.Name);
+                //Matrix4 worldT = b.Transform;
+                Matrix4 parentT = GetWorldTransform(b.ParentIndex).Inverted();
                 b.Transform = parentT * b.Transform;
-                if (!worldT.Equals(GetBoneTransform(b)))
+                //if (!worldT.Equals(GetBoneTransform(b)))
                 {
-                    Console.WriteLine("\t" + worldT.ToString());
-                    Console.WriteLine("\t" + GetBoneTransform(b).ToString());
-                    Console.WriteLine("\t" + GetBoneTransform(parent).ToString());
-                    Console.WriteLine("\t" + parentT.ToString());
+                    //Console.WriteLine("\t" + worldT.ToString());
+                    //Console.WriteLine("\t" + GetBoneTransform(b).ToString());
+                    //Console.WriteLine("\t" + GetBoneTransform(parent).ToString());
+                    //Console.WriteLine("\t" + parentT.ToString());
                 }
             }
 
             foreach (var child in GetChildren(b))
-                BoneWorldToRelativeTransform(child, b);
+                BoneWorldToRelativeTransform(child);
         }
 
         public GenericBone[] GetChildren(GenericBone b)
@@ -174,7 +173,7 @@ namespace Metanoia.Modeling
             {
                 Position = value.ExtractTranslation();
                 Scale = value.ExtractScale();
-                QuaternionRotation = value.ExtractRotation();
+                Rotation = ToEulerAngles(value);
             }
         }
 
@@ -189,6 +188,25 @@ namespace Metanoia.Modeling
         private static Vector3 ToEulerAngles(Quaternion q)
         {
             Matrix4 mat = Matrix4.CreateFromQuaternion(q);
+            float x, y, z;
+
+            y = (float)Math.Asin(-Clamp(mat.M31, -1, 1));
+
+            if (Math.Abs(mat.M31) < 0.99999)
+            {
+                x = (float)Math.Atan2(mat.M32, mat.M33);
+                z = (float)Math.Atan2(mat.M21, mat.M11);
+            }
+            else
+            {
+                x = 0;
+                z = (float)Math.Atan2(-mat.M12, mat.M22);
+            }
+            return new Vector3(x, y, z);
+        }
+
+        private static Vector3 ToEulerAngles(Matrix4 mat)
+        {
             float x, y, z;
 
             y = (float)Math.Asin(-Clamp(mat.M31, -1, 1));

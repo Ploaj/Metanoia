@@ -83,7 +83,7 @@ namespace Metanoia
                 {
                     if(Node is IModelFormat ModelFormat)
                     {
-                        Node.Open(File.GetFileBinary());
+                        Node.Open(File);
                         ModelViewer.SetModel(ModelFormat.ToGenericModel());
                         ModelViewer.RefreshRender();
                     }
@@ -121,13 +121,13 @@ namespace Metanoia
                 IFileFormat Node = GetFileFormatFromExtension(File.Extension);
 
                 if (Node != null)
-                    Node.Open(File.GetFileBinary());
+                    Node.Open(File);
 
                 if (Node is IModelFormat Model)
                 {
                     using (SaveFileDialog d = new SaveFileDialog())
                     {
-                        d.Filter = "Supported (*.smd*.dae*.obj)|*.smd;*.dae;*.obj";
+                        d.Filter = "Supported (*.smd*.dae*.obj*.mat)|*.smd;*.dae;*.obj;*.mat;";
 
                         if (d.ShowDialog() == DialogResult.OK)
                         {
@@ -137,6 +137,8 @@ namespace Metanoia
                                 Metanoia.Exporting.ExportSMD.Save(d.FileName, Model.ToGenericModel());
                             if (System.IO.Path.GetExtension(d.FileName) == ".dae")
                                 Metanoia.Exporting.ExportDAE.Save(d.FileName, Model.ToGenericModel());
+                            if (System.IO.Path.GetExtension(d.FileName) == ".mat")
+                                Metanoia.Exporting.ExportMat.Save(d.FileName, Model.ToGenericModel());
                         }
                     }
                 }

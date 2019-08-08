@@ -13,9 +13,9 @@ namespace Metanoia.Formats.PSP
         private GenericSkeleton Skeleton = new GenericSkeleton();
         private GenericModel Model = new GenericModel();
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
-            var igb = new IGBFile(Data);
+            var igb = new IGBFile(File.GetFileBinary());
 
             var igbSkel = new IGSkeleton(igb);
 

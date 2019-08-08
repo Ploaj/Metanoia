@@ -11,9 +11,9 @@ namespace Metanoia.Formats.GameCube
     [Format(".glg", "Super Mario Striker")]
     public class GLGStriker : IModelFormat
     {
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
-            using (DataReader r = new DataReader(new MemoryStream(Data)))
+            using (DataReader r = new DataReader(new FileStream(File.FilePath, FileMode.Open)))
             {
                 r.BigEndian = true;
 

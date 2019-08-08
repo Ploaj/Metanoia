@@ -1,11 +1,11 @@
 ﻿using System.Windows.Forms;
 using System.IO;
 
-namespace Metanoia.GUI
+namespace Metanoia
 {
     public class FileItem : ListViewItem
     {
-        public string FilePath;
+        public string FilePath { get; set; }
 
         public string Extension { get { return Path.GetExtension(FilePath); } }
 

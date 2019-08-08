@@ -78,6 +78,8 @@ namespace Metanoia.Exporting
                 writer.StartGeometrySection();
                 foreach(var mesh in Model.Meshes)
                 {
+                    mesh.MakeTriangles();
+
                     writer.StartGeometryMesh(mesh.Name);
 
                     writer.CurrentMaterial = mesh.MaterialName;

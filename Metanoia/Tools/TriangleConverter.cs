@@ -57,6 +57,49 @@ namespace Metanoia.Tools
             }
         }
 
+        public static void StripToList(List<short> indices, out List<short> outindices)
+        {
+            outindices = new List<short>();
+
+            int startDirection = 1;
+            int p = 0;
+            short f1 = indices[p++];
+            short f2 = indices[p++];
+            int faceDirection = startDirection;
+            short f3;
+            do
+            {
+                f3 = indices[p++];
+                if (f3 == -1)
+                {
+                    f1 = indices[p++];
+                    f2 = indices[p++];
+                    faceDirection = startDirection;
+                }
+                else
+                {
+                    faceDirection *= -1;
+                    if ((f1 != f2) && (f2 != f3) && (f3 != f1))
+                    {
+                        if (faceDirection > 0)
+                        {
+                            outindices.Add(f3);
+                            outindices.Add(f2);
+                            outindices.Add(f1);
+                        }
+                        else
+                        {
+                            outindices.Add(f2);
+                            outindices.Add(f3);
+                            outindices.Add(f1);
+                        }
+                    }
+                    f1 = f2;
+                    f2 = f3;
+                }
+            } while (p < indices.Count);
+        }
+
         /// <summary>
         /// reverses faces for triangle lists only
         /// </summary>

@@ -21,24 +21,26 @@ namespace Metanoia.Formats.GameCube
 
         private GenericModel outModel = new GenericModel();
 
-        private Dictionary<IHSDNode, int> jobjToIndex = new Dictionary<IHSDNode, int>();
+        private Dictionary<HSD_JOBJ, int> jobjToIndex = new Dictionary<HSD_JOBJ, int>();
 
         private Dictionary<byte[], int> tobjToIndex = new Dictionary<byte[], int>();
 
         private HSD_JOBJ FirstJOBJ = null;
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
             var r = new HSDFile();
-            System.IO.File.WriteAllBytes("temp.bin", Data);
-            r.Decompile("temp.bin");
+            r.Decompile(File.FilePath);
             
             foreach(var root in r.Roots)
             {
                 Debug.WriteLine(root.Name);
 
-                ParseJOBJs(root.Node, null);
-
+                if (root.Node is HSD_JOBJ jobj)
+                    ParseJOBJs(jobj, null);
+                if (root.Node is HSD_SOBJ sobj)
+                    ParseJOBJs(sobj.JOBJDescs.Elements[0].RootJoint, null);
+                
                 if (FirstJOBJ != null && outModel.Meshes.Count == 0)
                 {
                     List<HSD_JOBJ> BoneList = FirstJOBJ.DepthFirstList;
@@ -48,16 +50,15 @@ namespace Metanoia.Formats.GameCube
             }
         }
         
-        private void ParseJOBJs(IHSDNode node, IHSDNode parent)
+        private void ParseJOBJs(HSD_JOBJ jobj, HSD_JOBJ parent)
         {
             //Debug.WriteLine(node.GetType());
-            if(node is HSD_JOBJ jobj)
             {
                 if (FirstJOBJ == null)
                     FirstJOBJ = jobj;
                 var bone = new GenericBone();
                 bone.Name = "JOBJ_" + skeleton.Bones.Count;
-                jobjToIndex.Add(node, skeleton.Bones.Count);
+                jobjToIndex.Add(jobj, skeleton.Bones.Count);
                 skeleton.Bones.Add(bone);
                 bone.Position = new Vector3(jobj.Transforms.TX, jobj.Transforms.TY, jobj.Transforms.TZ);
                 bone.Rotation = new Vector3(jobj.Transforms.RX, jobj.Transforms.RY, jobj.Transforms.RZ);
@@ -66,13 +67,21 @@ namespace Metanoia.Formats.GameCube
                     bone.ParentIndex = jobjToIndex[parent];
             }
             
-            if(node != null)
-            foreach(var child in node.Children)
-                ParseJOBJs(child, node);
+            if(jobj != null)
+            foreach(var child in jobj.Children)
+                ParseJOBJs(child, jobj);
         }
 
-        private void ParseDOBJs(IHSDNode node, IHSDNode parent, List<HSD_JOBJ> BoneList)
+        private void ParseDOBJs(IHSDNode node, HSD_JOBJ parent, List<HSD_JOBJ> BoneList)
         {
+            if (node is HSD_JOBJ jobj)
+            {
+                if(jobj.DOBJ != null)
+                foreach (var child in jobj.DOBJ.List)
+                    ParseDOBJs(child, jobj, BoneList);
+                foreach (var child in jobj.Children)
+                    ParseDOBJs(child, child, BoneList);
+            }
             if (node is HSD_DOBJ dobj)
             {
                 Console.WriteLine("DOBJ found");
@@ -127,7 +136,7 @@ namespace Metanoia.Formats.GameCube
                     {
                         // Decode the Display List Data
                         GXDisplayList DisplayList = new GXDisplayList(pobj.DisplayListBuffer, pobj.VertexAttributes);
-                        var Vertices = ToGenericVertex(VertexAccessor.GetDecodedVertices(DisplayList, pobj), BoneList, pobj.BindGroups != null ? new List<HSD_JOBJWeight>(pobj.BindGroups.Elements) : null, parent);
+                        var Vertices = ToGenericVertex(VertexAccessor.GetDecodedVertices(pobj), BoneList, pobj.BindGroups != null ? new List<HSD_JOBJWeight>(pobj.BindGroups.Elements) : null, parent);
                         int bufferOffset = 0;
                         foreach (GXPrimitiveGroup g in DisplayList.Primitives)
                         {
@@ -166,12 +175,9 @@ namespace Metanoia.Formats.GameCube
                 mesh.Optimize();
                 Tools.TriangleConverter.ReverseFaces(mesh.Triangles, out mesh.Triangles);
             }
-
-            foreach (var child in node.Children)
-                ParseDOBJs(child, node, BoneList);
         }
 
-        private List<GenericVertex> ToGenericVertex(GXVertex[] InVerts, List<HSD_JOBJ> BoneList, List<HSD_JOBJWeight> WeightList, IHSDNode parent)
+        private List<GenericVertex> ToGenericVertex(GXVertex[] InVerts, List<HSD_JOBJ> BoneList, List<HSD_JOBJWeight> WeightList, HSD_JOBJ parent)
         {
             var finalList = new List<GenericVertex>(InVerts.Length);
 

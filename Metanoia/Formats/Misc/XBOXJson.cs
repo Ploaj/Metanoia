@@ -8,9 +8,9 @@ namespace Metanoia.Formats.Misc
     {
         private GenericModel Model;
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
-            dynamic stuff = JObject.Parse(System.Text.Encoding.UTF8.GetString(Data));
+            dynamic stuff = JObject.Parse(System.Text.Encoding.UTF8.GetString(File.GetFileBinary()));
             Model = new GenericModel();
             Model.Skeleton = new GenericSkeleton();
             

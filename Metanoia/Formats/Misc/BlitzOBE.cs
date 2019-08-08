@@ -439,9 +439,9 @@ namespace Metanoia.Formats.Misc
             return GetGenericModel();
         }
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
-            ParseOBE(Data);
+            ParseOBE(File.GetFileBinary());
         }
     }
 }

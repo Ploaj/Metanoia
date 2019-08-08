@@ -17,8 +17,10 @@ namespace Metanoia.Formats.N64
 
         }
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
+            var Data = File.GetFileBinary();
+
             Model = new GenericModel();
             Model.Skeleton = new GenericSkeleton();
             Model.Skeleton.RotationOrder = RotationOrder.ZYX;

@@ -9,15 +9,29 @@ namespace Metanoia.Modeling
 {
     public struct GenericVertex
     {
-        public const int Stride = (3 + 3 + 2 + 2 + 2 + 4 + 4 + 4) * 4;
+        public const int Stride = (3 + 3 + 2 + 4 + 4 + 4 + 4 + 4 + 2 + 2 + 4 + 4 + 4 + 4 + 4) * 4;
         public Vector3 Pos;
         public Vector3 Nrm;
         public Vector2 UV0;
-        public Vector2 UV1;
-        public Vector2 UV2;
         public Vector4 Clr;
         public Vector4 Bones;
         public Vector4 Weights;
+        public Vector4 Tan;
+        public Vector4 Bit;
+        public Vector2 UV1;
+        public Vector2 UV2;
+        public Vector4 Clr1;
+        public Vector4 Fog;
+        public Vector4 Extra;
+        public Vector4 Extra2;
+        public Vector4 Extra3;
+
+        public override string ToString()
+        {
+            return $"P: {Pos.ToString()} N: {Nrm.ToString()} T: {Tan.ToString()} " +
+                $"BT: {Bit.ToString()} UV: {UV0.ToString()} C: {Clr.ToString()} C1: {Clr1.ToString()}" +
+                $"B: {Bones.ToString()} W: {Weights.ToString()} E: {Extra.ToString()} E: {Extra2.ToString()} F: {Fog.ToString()}";
+        }
     }
 
     public class GenericModel
@@ -145,6 +159,11 @@ namespace Metanoia.Modeling
             {
                 for(int index = 0; index < Triangles.Count-2; index ++)
                 {
+                    if (Triangles[index] == Triangles[index + 1] ||
+                        Triangles[index + 1] == Triangles[index + 2] ||
+                        Triangles[index + 2] == Triangles[index])
+                        continue;
+
                     if (index % 2 != 1)
                     {
                         newTri.Add(Triangles[index]);
@@ -173,5 +192,7 @@ namespace Metanoia.Modeling
         public TextureWrapMode TWrap { get; set; } = TextureWrapMode.Repeat;
 
         public bool EnableBlend = true;
+
+        public string MaterialInfo { get; set; } = "";
     }
 }

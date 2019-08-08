@@ -15,9 +15,9 @@ namespace Metanoia.Formats._3DS.Level5
     {
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
-            using (DataReader r = new DataReader(new MemoryStream(Data)))
+            using (DataReader r = new DataReader(new MemoryStream(File.GetFileBinary())))
             {
                 if (!new string(r.ReadChars(4)).Equals("XPCK"))
                     throw new Exception("File header error");

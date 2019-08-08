@@ -166,9 +166,6 @@ namespace Metanoia.Rendering
 
             GL.Enable(EnableCap.CullFace);
 
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
-
             foreach (var mesh in transparentZSorted)
             {
                 if (mesh.Visible)
@@ -177,12 +174,24 @@ namespace Metanoia.Rendering
 
                     GL.ActiveTexture(TextureUnit.Texture1);
                     var material = Model.GetMaterial(mesh);
-                    if (material != null && material.TextureDiffuse != null && Textures.ContainsKey(material.TextureDiffuse))
+                    if(material != null)
                     {
-                        Textures[material.TextureDiffuse].SetFromMaterial(Model.GetMaterial(mesh));
-                        GL.Uniform1(GenericShader.GetAttributeLocation("hasDif"), 1);
-                    }
+                        if (material.TextureDiffuse != null && Textures.ContainsKey(material.TextureDiffuse))
+                        {
+                            Textures[material.TextureDiffuse].SetFromMaterial(Model.GetMaterial(mesh));
+                            GL.Uniform1(GenericShader.GetAttributeLocation("hasDif"), 1);
+                        }
 
+                        if (material.EnableBlend)
+                        {
+                            GL.Enable(EnableCap.Blend);
+                            GL.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
+                        }
+                        else
+                        {
+                            GL.Disable(EnableCap.Blend);
+                        }
+                    }
                     GL.DrawElements(RenderMode == RenderMode.Points ? PrimitiveType.Points : mesh.PrimitiveType, mesh.Triangles.Count, DrawElementsType.UnsignedInt, MeshToOffset[mesh] * 4);
                 }
             }

@@ -71,9 +71,9 @@ namespace Metanoia.Formats.Misc
 
         private List<GenericMesh> Meshes = new List<GenericMesh>();
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
-            using (DataReader reader = new DataReader(new MemoryStream(Data)))
+            using (DataReader reader = new DataReader(new MemoryStream(File.GetFileBinary())))
             {
                 reader.BigEndian = true;
 

@@ -167,9 +167,9 @@ namespace Metanoia.Formats.GameCube
         private List<Material1Object> Materials1 = new List<Material1Object>();
         private List<MaterialObject> Materials = new List<MaterialObject>();
 
-        public void Open(byte[] Data)
+        public void Open(FileItem File)
         {
-            using (DataReader reader = new DataReader(new MemoryStream(Data)))
+            using (DataReader reader = new DataReader(new FileStream(File.FilePath, FileMode.Open)))
             {
                 reader.BigEndian = true;
 
