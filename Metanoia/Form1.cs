@@ -53,17 +53,20 @@ namespace Metanoia
             if(e.Node != null)
             {
                 fileList.Items.Clear();
-                fileList.Items.AddRange(((FolderNode)e.Node).GetFiles().ToArray());
+                foreach(var f in ((FolderNode)e.Node).GetFiles())
+                {
+                    fileList.Items.Add(new ListViewItem() { Tag = f, Text = System.IO.Path.GetFileName(f.FilePath) });
+                }
 
                 foreach (var item in fileList.Items)
                 {
                     IFileFormat Node = GetFileFormatFromExtension(((FileItem)item).Extension);
-                    ((FileItem)item).ForeColor = System.Drawing.Color.Gray;
+                    //((FileItem)item).ForeColor = System.Drawing.Color.Gray;
                     if (Node != null)
                     {
-                        if (Node is IModelFormat ModelFormat)
+                        if (Node is IModelContainerFormat ModelFormat)
                         {
-                            ((FileItem)item).ForeColor = System.Drawing.Color.Black;
+                            //((FileItem)item).ForeColor = System.Drawing.Color.Black;
                         }
                     }
                 }
@@ -75,13 +78,13 @@ namespace Metanoia
             if (fileList.SelectedItems.Count == 0 || fileList.SelectedItems[0] == null)
                 return;
 
-            if (fileList.SelectedItems[0] is FileItem File)
+            if (fileList.SelectedItems[0].Tag is FileItem File)
             {
                 IFileFormat Node = GetFileFormatFromExtension(File.Extension);
                 
                 if (Node != null)
                 {
-                    if(Node is IModelFormat ModelFormat)
+                    if(Node is IModelContainerFormat ModelFormat)
                     {
                         Node.Open(File);
                         ModelViewer.SetModel(ModelFormat.ToGenericModel());
@@ -116,7 +119,7 @@ namespace Metanoia
 
         private void exportedSelectedToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(fileList.SelectedItems.Count > 0 && fileList.SelectedItems[0] is FileItem File)
+            if(fileList.SelectedItems.Count > 0 && fileList.SelectedItems[0].Tag is FileItem File)
             {
                 IFileFormat Node = GetFileFormatFromExtension(File.Extension);
 

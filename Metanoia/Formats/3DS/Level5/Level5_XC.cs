@@ -10,10 +10,33 @@ using OpenTK;
 
 namespace Metanoia.Formats._3DS.Level5
 {
-    [Format(Extension = ".xc", Description = "Level 5 Container")]
-    public class Level5_XC : IModelFormat
+    public class Level5_XC : IContainerFormat
     {
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
+
+        public string Name => "";
+
+        public string Extension => ".xc";
+
+        public string Description => "";
+
+        public bool CanOpen => true;
+
+        public bool CanSave => false;
+
+        public FileItem[] GetFiles()
+        {
+            FileItem[] files = new FileItem[Files.Count];
+
+            var keys = Files.Keys.ToArray();
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                files[i] = new FileItem(keys[i], Files[keys[i]]);
+            }
+
+            return files;
+        }
 
         public void Open(FileItem File)
         {
@@ -66,6 +89,11 @@ namespace Metanoia.Formats._3DS.Level5
 
             }
 
+        }
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
         }
 
         public GenericModel ToGenericModel()
@@ -172,6 +200,11 @@ namespace Metanoia.Formats._3DS.Level5
             }
 
             return model;
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.MagicString == "XPCK";
         }
     }
 }

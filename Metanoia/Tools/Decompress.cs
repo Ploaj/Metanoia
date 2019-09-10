@@ -661,5 +661,109 @@ namespace Metanoia.Tools
             zlibStream.Close();
             return stream.ToArray();
         }
+
+
+        private static int fbuf = 0;
+        public static byte[] PRS_Mod(byte[] compData, int decompSize, int compSize)
+        {
+            fbuf = 0;
+            return PRS_8ing(decompSize, compData, compSize);
+        }
+
+        private static int prs_8ing_get_bits(int n, byte[] sbuf, ref int sptr, ref int blen)
+        {
+            int retv;
+
+            retv = 0;
+            while (n != 0)
+            {
+                retv <<= 1;
+                if (blen == 0)
+                {
+                    fbuf = sbuf[sptr];
+                    //if(*sptr<256)
+                    //{ fprintf(stderr, "[%02x] ", fbuf&0xff); fflush(0); }
+                    sptr++;
+                    blen = 8;
+                }
+
+                if ((fbuf & 0x80) != 0)
+                {
+                    retv |= 1;
+                }
+
+                fbuf <<= 1;
+                blen--;
+                n--;
+            }
+
+            return retv;
+        }
+
+        private static byte[] PRS_8ing(int dlen, byte[] sbuf, int slen)
+        {
+            byte[] dbuf = new byte[dlen];
+            int sptr;
+            int dptr;
+            int i;
+            int flag;
+            int len;
+            int pos;
+
+            int blen = 0;
+
+            sptr = 0;
+            dptr = 0;
+            while (sptr < slen)
+            {
+                flag = prs_8ing_get_bits(1, sbuf, ref sptr, ref blen);
+                if (flag == 1)
+                {
+                    //if(sptr<256)
+                    //{ fprintf(stderr, "%02x ", (u8)sbuf[sptr]); fflush(0); }
+                    if (dptr < dlen)
+                    {
+                        dbuf[dptr++] = sbuf[sptr++];
+                    }
+                }
+                else
+                {
+                    flag = prs_8ing_get_bits(1, sbuf, ref sptr, ref blen);
+                    if (flag == 0)
+                    {
+                        len = prs_8ing_get_bits(2, sbuf, ref sptr, ref blen) + 2;
+                        pos = (int)(sbuf[sptr++] | 0xffffff00);
+                    }
+                    else
+                    {
+                        pos = (int)((sbuf[sptr++] << 8) | 0xffff0000);
+                        pos |= sbuf[sptr++] & 0xff;
+                        len = pos & 0x07;
+                        pos >>= 3;
+                        if (len == 0)
+                        {
+                            len = (sbuf[sptr++] & 0xff) + 1;
+                        }
+                        else
+                        {
+                            len += 2;
+                        }
+                    }
+                    //if(sptr<256)
+                    //{ fprintf(stderr, "<%08x(%08x): %08x %d> \n", dptr, dlen, pos, len); fflush(0); }
+                    pos += dptr;
+                    for (i = 0; i < len; i++)
+                    {
+                        if (dptr < dlen)
+                        {
+                            dbuf[dptr++] = dbuf[(uint)pos++];
+                        }
+                    }
+                }
+            }
+
+            return dbuf;
+        }
+
     }
 }

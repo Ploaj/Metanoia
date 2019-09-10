@@ -27,7 +27,7 @@ namespace Metanoia
         {
         }
 
-        public DataReader(FileItem item) : base(new FileStream(item.FilePath, FileMode.Open))
+        public DataReader(FileItem item) : base(item.EmbeddedFile ? (Stream)new MemoryStream(item.GetFileBinary()) : new FileStream(item.FilePath, FileMode.Open))
         {
         }
 

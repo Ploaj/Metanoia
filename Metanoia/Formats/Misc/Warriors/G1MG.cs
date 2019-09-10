@@ -215,6 +215,7 @@ namespace Metanoia.Formats.Misc
             {
                 for (int c = 0; c < IndexBufferCount; c++)
                 {
+                    r.Align(4);
                     int fCount = r.ReadInt32();
                     var indBuffer = new ushort[fCount];
                     Console.WriteLine(r.ReadInt32() + " " + r.ReadInt32());

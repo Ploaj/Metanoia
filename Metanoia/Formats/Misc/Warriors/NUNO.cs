@@ -37,6 +37,11 @@ namespace Metanoia.Formats.Misc
         public List<NUNOv33Entry> V33Entries = new List<NUNOv33Entry>();
         public List<NUNOv33Entry> V35Entries = new List<NUNOv33Entry>();
 
+        public NUNO()
+        {
+
+        }
+
         public NUNO(DataReader r)
         {
             int sectionCount = r.ReadInt32();

@@ -10,10 +10,19 @@ using Metanoia.Tools;
 namespace Metanoia.Formats.GameCube
 {
     //Incomplete
-    //[FormatAttribute(Extension = ".gcmesh", Description = "Shrek Slam")]
-    public class ShrekSlam : IModelFormat
+    public class ShrekSlam : I3DModelFormat
     {
         private GenericModel Model = new GenericModel();
+
+        public string Name => "";
+
+        public string Extension => ".gcmesh";
+
+        public string Description => "";
+
+        public bool CanOpen => true;
+
+        public bool CanSave => false;
 
         public void Open(FileItem File)
         {
@@ -160,6 +169,16 @@ namespace Metanoia.Formats.GameCube
         public GenericModel ToGenericModel()
         {
             return Model;
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.MagicString == "GCNM";
+        }
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -8,46 +8,64 @@ using System.IO;
 
 namespace Metanoia.Formats.Misc
 {
-    [Format(Extension = ".stp", Description = "JStars Models")]
-    public class JStar : IModelFormat
+    public class STPK : IContainerFormat
     {
-        public class STPK
+        public List<FileItem> Files = new List<FileItem>();
+        
+        public string Name => "JStar";
+        public string Extension => ".srd";
+        public string Description => "";
+        public bool CanOpen => true;
+        public bool CanSave => false;
+
+        public FileItem[] GetFiles()
         {
-            public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
+            return Files.ToArray();
+        }
 
-            public STPK(string FileName)
+        public void Open(FileItem file)
+        {
+            using (DataReader r = new DataReader(file))
             {
-                using (DataReader r = new DataReader(new FileStream(FileName, FileMode.Open)))
-                {
-                    r.BigEndian = true;
-                    r.ReadInt32(); // magic
-                    r.ReadInt32(); // version
-                    int resourceCount = r.ReadInt32();
-                    r.ReadUInt32();
+                r.BigEndian = true;
+                r.ReadInt32(); // magic
+                r.ReadInt32(); // version
+                int resourceCount = r.ReadInt32();
+                r.ReadUInt32();
 
-                    for(int i = 0; i < resourceCount; i++)
-                    {
-                        var offset = r.ReadUInt32();
-                        var size = r.ReadInt32();
-                        r.ReadInt64(); // padding?
-                        var name = r.ReadString(0x20);
-                        Files.Add(name, r.GetSection(offset, size));
-                    }
+                for (int i = 0; i < resourceCount; i++)
+                {
+                    var offset = r.ReadUInt32();
+                    var size = r.ReadInt32();
+                    r.ReadInt64(); // padding?
+                    var name = r.ReadString(0x20);
+                    Files.Add(new FileItem(name, r.GetSection(offset, size)));
                 }
             }
         }
 
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.MagicString == "STPK";
+        }
+    }
+
+    public class JStar : I3DModelFormat
+    {
+        public string Name => "JStar Model";
+        public string Extension => ".srd";
+        public string Description => "";
+        public bool CanOpen => true;
+        public bool CanSave => false;
+        
         public void Open(FileItem File)
         {
-            STPK p = new STPK(File.FilePath);
-
-            foreach(var v in p.Files)
-            {
-                if(v.Value.Length > 0)
-                    Console.WriteLine(v.Key + " " + v.Value.Length.ToString("X"));
-            }
-
-            using(DataReader r = new DataReader(new MemoryStream(p.Files["017_gon_01p_PS3.srd"])))
+            using(DataReader r = new DataReader(File))
             {
                 r.BigEndian = true;
                 ReadCFH(r);
@@ -84,7 +102,7 @@ namespace Metanoia.Formats.Misc
 
             Console.WriteLine(name);
 
-            for(int i = 0; i < 0x200; i++)
+            for(int i = 0; i < 0x400; i++)
             {
                 var start = r.Position;
 
@@ -115,6 +133,18 @@ namespace Metanoia.Formats.Misc
                     case "$SKL":
 
                         break;
+                    case "$SCN":
+
+                        break;
+                    case "$MSH":
+
+                        break;
+                    case "$TRE":
+
+                        break;
+                    case "$CLT":
+
+                        break;
                     default:
                         return;
                 }
@@ -129,6 +159,16 @@ namespace Metanoia.Formats.Misc
         public GenericModel ToGenericModel()
         {
             return new GenericModel();
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.MagicString == "$CFH";
+        }
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
         }
 
         public struct VTX

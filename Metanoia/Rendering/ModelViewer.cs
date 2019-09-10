@@ -127,6 +127,9 @@ namespace Metanoia.Rendering
 
         private bool ShowBones = true;
 
+
+        private GenericModel Model { get; set; }
+
         public ModelViewer()
         {
             InitializeComponent();
@@ -198,7 +201,7 @@ namespace Metanoia.Rendering
                 UpdateCamera();
             }
 
-            GenericRenderer.SetGenericModel(model);
+            Model = model;
             ModelPanel.SetModel(model);
         }
 
@@ -209,6 +212,17 @@ namespace Metanoia.Rendering
 
         private void Viewport_Paint(object sender, PaintEventArgs e)
         {
+            if (GenericRenderer == null)
+            {
+                return;
+            }
+            if (!GenericRenderer.HasModelSet)
+            {
+                GenericRenderer.SetGenericModel(Model);
+            }
+
+            Viewport.MakeCurrent();
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.Enable(EnableCap.DepthTest);
@@ -363,7 +377,7 @@ namespace Metanoia.Rendering
         private void Viewport_MouseMove(object sender, MouseEventArgs e)
         {
             float speed = 1 / Vector3.TransformPosition(Vector3.Zero, Camera).LengthFast;
-            speed = (1 - speed) * 1;
+            speed = (1 - speed) * 0.01f;
             if (e.Button == MouseButtons.Left)
             {
                 YRotation -= (PrevX - e.X) / 50f;

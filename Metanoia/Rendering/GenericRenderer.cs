@@ -19,6 +19,8 @@ namespace Metanoia.Rendering
 
     public class GenericRenderer
     {
+        public bool HasModelSet { get => Model != null; }
+
         public RenderMode RenderMode { get; set; }
 
         private Shader GenericShader = null;

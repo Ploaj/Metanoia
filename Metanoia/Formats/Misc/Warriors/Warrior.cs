@@ -7,10 +7,19 @@ using OpenTK;
 
 namespace Metanoia.Formats.Misc
 {
-    [Format(Extension = ".g1m")]
-    public class Warrior : IModelFormat
+    public class Warrior : I3DModelFormat
     {
         private GenericSkeleton Skeleton { get; set; } = new GenericSkeleton();
+
+        public string Name => "";
+
+        public string Extension => ".g1m";
+
+        public string Description => "";
+
+        public bool CanOpen => true;
+
+        public bool CanSave => false;
 
         private List<G1M> Models = new List<G1M>();
 
@@ -160,6 +169,8 @@ namespace Metanoia.Formats.Misc
                 while(r.Position < r.Length)
                 {
                     string flag = new string(r.ReadChars(8));
+                    if (r.Position + 4 >= r.Length)
+                        break;
                     var sectionEnd = r.Position + r.ReadUInt32() - 8;
                     Console.WriteLine(flag + " " + sectionEnd.ToString("X8"));
 
@@ -198,6 +209,7 @@ namespace Metanoia.Formats.Misc
                 var mod = g1m.G1MG;
 
                 var nuno = g1m.NUNO;
+                var nunv = g1m.NUNV;
 
                 model.Skeleton = g1m.Skeleton.Skeleton;
 
@@ -207,8 +219,9 @@ namespace Metanoia.Formats.Misc
                 //var idTonunoBoneToBone32 = new List<int>();
 
                 var entries = new List<NUNO.NUNOv33Entry>();
-                if (g1m.NUNV != null)
-                    entries.AddRange(g1m.NUNV.V33Entries);
+                var nunoIndexOffset = nunv.V33Entries.Count;
+                if (nunv != null)
+                    entries.AddRange(nunv.V33Entries);
                 if (nuno != null)
                     entries.AddRange(nuno.V33Entries);
 
@@ -273,9 +286,10 @@ namespace Metanoia.Formats.Misc
                 
                 foreach(var group in mod.Lods[0].Groups)
                 {
-                    Console.WriteLine(group.Name + " " + group.ID + " " + group.ID2);
                     var isCloth = (group.ID & 0xF) == 1;
                     var isPoint = (group.ID & 0xF) == 2;
+                    var NunSection = (group.ID2 - (group.ID2 % 10000)) / 10000;
+                    Console.WriteLine(group.Name + " " + group.ID + " " + group.ID2 + " " + NunSection);
 
                     foreach (var polyindex in group.Indices)
                     {
@@ -309,7 +323,17 @@ namespace Metanoia.Formats.Misc
                         if(isCloth)
                         {
                             Dictionary<int, int> nunoBoneToBone = idTonunoBoneToBone33[group.ID2 & 0xF];
-                            //mesh.Name += "_driver_" + (group.ID2 & 0xF);
+                            if (NunSection == 2 && nunv != null && nuno != null)
+                            {
+                                foreach(var v in idTonunoBoneToBone33)
+                                {
+                                    Console.WriteLine(string.Join(", ", v.Keys.ToArray()));
+                                }
+                                nunoBoneToBone = idTonunoBoneToBone33[(group.ID2 & 0xF) + nunoIndexOffset];
+
+                                Console.WriteLine(string.Join(", ", nunoBoneToBone.Keys.ToArray()));
+                            }
+                                //mesh.Name += "_driver_" + (group.ID2 & 0xF);
 
                             for (int i = 0; i < mesh.VertexCount; i++)
                             {
@@ -453,7 +477,17 @@ namespace Metanoia.Formats.Misc
             }
             return temp;
         }
-        
+
+        public bool Verify(FileItem file)
+        {
+            return file.MagicString == "_M1G";
+            // TODO: can also check version
+        }
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 

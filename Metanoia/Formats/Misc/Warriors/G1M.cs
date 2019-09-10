@@ -15,7 +15,7 @@ namespace Metanoia.Formats.Misc
 
         public NUNO NUNO { get; set; }
 
-        public NUNO NUNV { get; set; }
+        public NUNV NUNV { get; set; }
 
         public G1M(DataReader r)
         {
@@ -28,7 +28,10 @@ namespace Metanoia.Formats.Misc
             {
                 var start = r.Position;
                 string flag = new string(r.ReadChars(8));
-                var sectionEnd = r.Position + r.ReadUInt32() - 8;
+                if (r.Position + 4 >= r.Length)
+                    break;
+                var size = r.ReadUInt32();
+                var sectionEnd = r.Position + size - 12;
 
                 //File.WriteAllBytes("Warriors\\Claude\\" + flag, r.GetSection(start, (int)sectionEnd));
 
@@ -49,7 +52,7 @@ namespace Metanoia.Formats.Misc
                         NUNO = new NUNO(r);
                         break;
                     case "VNUN":
-                        NUNV = new NUNO(r);
+                        NUNV = new NUNV(r);
                         break;
                 }
 
