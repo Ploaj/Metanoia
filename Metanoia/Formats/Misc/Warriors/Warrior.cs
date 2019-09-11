@@ -219,7 +219,9 @@ namespace Metanoia.Formats.Misc
                 //var idTonunoBoneToBone32 = new List<int>();
 
                 var entries = new List<NUNO.NUNOv33Entry>();
-                var nunoIndexOffset = nunv.V33Entries.Count;
+                var nunoIndexOffset = 0;
+                if (nunv != null)
+                    nunoIndexOffset = nunv.V33Entries.Count;
                 if (nunv != null)
                     entries.AddRange(nunv.V33Entries);
                 if (nuno != null)
@@ -325,13 +327,7 @@ namespace Metanoia.Formats.Misc
                             Dictionary<int, int> nunoBoneToBone = idTonunoBoneToBone33[group.ID2 & 0xF];
                             if (NunSection == 2 && nunv != null && nuno != null)
                             {
-                                foreach(var v in idTonunoBoneToBone33)
-                                {
-                                    Console.WriteLine(string.Join(", ", v.Keys.ToArray()));
-                                }
                                 nunoBoneToBone = idTonunoBoneToBone33[(group.ID2 & 0xF) + nunoIndexOffset];
-
-                                Console.WriteLine(string.Join(", ", nunoBoneToBone.Keys.ToArray()));
                             }
                                 //mesh.Name += "_driver_" + (group.ID2 & 0xF);
 
