@@ -223,6 +223,8 @@ namespace Metanoia.Rendering
 
             Viewport.MakeCurrent();
 
+            GL.Viewport(0, 0, Width, Height);
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             GL.Enable(EnableCap.DepthTest);
@@ -238,7 +240,7 @@ namespace Metanoia.Rendering
             GL.LoadMatrix(ref Camera);
 
             RenderFloor();
-            
+
             GenericRenderer.RenderShader(Camera, ShowBones);
 
             Viewport.SwapBuffers();
@@ -319,7 +321,6 @@ namespace Metanoia.Rendering
 
         private void Viewport_Resize(object sender, EventArgs e)
         {
-            GL.Viewport(0, 0, Width, Height);
             UpdateCamera();
             Viewport.Invalidate();
         }
@@ -374,10 +375,33 @@ namespace Metanoia.Rendering
             Render(Viewport.Width, Viewport.Height);
         }
 
+        private void exportButton_Click(object sender, EventArgs e)
+        {
+            ExportModel();
+        }
+
+        public void ExportModel()
+        {
+            using (SaveFileDialog d = new SaveFileDialog())
+            {
+                d.Filter = FormatManager.Instance.GetModelExportFilter();
+                d.FileName = Model.Name;
+                if (string.IsNullOrEmpty(d.FileName))
+                    d.FileName = "model";
+
+                if(d.ShowDialog() == DialogResult.OK)
+                {
+                    FormatManager.Instance.ExportModel(d.FileName, Model);
+                }
+            }
+        }
+
         private void Viewport_MouseMove(object sender, MouseEventArgs e)
         {
-            float speed = 1 / Vector3.TransformPosition(Vector3.Zero, Camera).LengthFast;
-            speed = (1 - speed) * 0.01f;
+            var camPos = Vector3.TransformPosition(Vector3.Zero, Camera);
+
+            float speed = (float)Math.Sqrt(camPos.X * camPos.X + camPos.Z * camPos.Z) * 0.025f;
+
             if (e.Button == MouseButtons.Left)
             {
                 YRotation -= (PrevX - e.X) / 50f;
@@ -385,8 +409,8 @@ namespace Metanoia.Rendering
             }
             if (e.Button == MouseButtons.Right)
             {
-                X -= (PrevX - e.X) * speed;
-                Y += (PrevY - e.Y) * speed;
+                X -= (PrevX - e.X) * 0.75f * speed;
+                Y += (PrevY - e.Y) * 0.75f * speed;
             }
             PrevX = e.X;
             PrevY = e.Y;

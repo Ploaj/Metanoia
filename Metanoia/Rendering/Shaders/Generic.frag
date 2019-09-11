@@ -22,7 +22,7 @@ void main()
 
 	if(hasDif == 1){
 		diffuseColor = texture2D(dif, TexCoord0, 0).xyz;
-		alpha = texture2D(dif, TexCoord0, 0).a;
+		//alpha = texture2D(dif, TexCoord0, 0).a;
 	}
 
 	vec3 lightDir = vec3(0, 0, 1);

@@ -7,12 +7,25 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Metanoia.Formats.Misc
 {
-    [FormatAttribute(Extension = ".gcp", Description = "BlitzXboxModel")]
-    public class Blitz : IModelFormat
+    public class Blitz : I3DModelFormat
     {
-
         private List<OBE> OBEs = new List<OBE>();
 
+        public string Name => "Blitz Model";
+        public string Extension => ".gcp";
+        public string Description => "XBOX version";
+        public bool CanOpen => true;
+        public bool CanSave => false;
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.Extension.Equals(Extension);
+        }
 
         public void Open(FileItem File)
         {
@@ -76,8 +89,6 @@ namespace Metanoia.Formats.Misc
                 
             }
         }
-
-        
 
         public GenericModel ToGenericModel()
         {

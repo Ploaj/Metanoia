@@ -3,10 +3,24 @@ using Newtonsoft.Json.Linq;
 
 namespace Metanoia.Formats.Misc
 {
-    [Format(Extension = ".json", Description = "XBOX json")]
-    public class XBOXJson : IModelFormat
+    public class XBOXJson : I3DModelFormat
     {
         private GenericModel Model;
+
+        public string Name => "XBOX json Model";
+
+        public string Extension => ".json";
+
+        public string Description => "";
+
+        public bool CanOpen => true;
+
+        public bool CanSave => false;
+
+        public bool Verify(FileItem item)
+        {
+            return item.Extension.Equals(".json");
+        }
 
         public void Open(FileItem File)
         {
@@ -80,6 +94,11 @@ namespace Metanoia.Formats.Misc
         public GenericModel ToGenericModel()
         {
             return Model;
+        }
+
+        public void Save(string filePath)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

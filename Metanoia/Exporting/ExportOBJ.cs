@@ -1,19 +1,29 @@
 ﻿using Metanoia.Modeling;
 using OpenTK;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Metanoia.Exporting
 {
-    [ExportAttribute(Name = "Waveform OBJ", Extension = ".obj", ExportType = ExportType.Model)]
-    public class ExportOBJ
+    public class ExportOBJ : IModelExporter
     {
         public static void Save(string FilePath, GenericModel Model)
+        {
+            new ExportOBJ().Export(FilePath, Model);
+        }
+
+        public string Name()
+        {
+            return "Waveform OBJ";
+        }
+
+        public string Extension()
+        {
+            return ".obj";
+        }
+
+        public void Export(string FilePath, GenericModel Model)
         {
             bool UseMaterial = false;
             DialogResult dialogResult = MessageBox.Show("Export Materials and Textures?", "OBJ Exporter", MessageBoxButtons.YesNo);

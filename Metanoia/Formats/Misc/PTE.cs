@@ -6,9 +6,18 @@ using OpenTK;
 
 namespace Metanoia.Formats.Misc
 {
-    [FormatAttribute(Extension = ".wii", Description = "Punch Time Explosion Wii")]
-    public class PTE : IModelFormat
+    public class PTE : I3DModelFormat
     {
+        public string Name => "Punch Time Explosion";
+
+        public string Extension => ".wii";
+
+        public string Description => "Wii Version";
+
+        public bool CanOpen => true;
+
+        public bool CanSave => false;
+
         private struct VapsHeader
         {
             public int Magic;
@@ -296,6 +305,16 @@ namespace Metanoia.Formats.Misc
             model.Meshes = Meshes;
 
             return model;
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.Extension.Equals(Extension);
+        }
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -7,10 +7,25 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Metanoia.Formats.N64
 {
-    [FormatAttribute(Extension = ".pers", Description = "Pokemon Stadium Model")]
-    public class PS_Fragment : IModelFormat
+    public class PS_Fragment : I3DModelFormat
     {
         GenericModel Model = new GenericModel();
+
+        public string Name => "Pokemon Stadium Model";
+        public string Extension => ".pers";
+        public string Description => "";
+        public bool CanOpen => true;
+        public bool CanSave => false;
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.Extension.Equals(Extension);
+        }
 
         public PS_Fragment()
         {

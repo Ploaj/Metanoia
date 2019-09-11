@@ -7,9 +7,24 @@ using System.IO;
 
 namespace Metanoia.Formats.Misc
 {
-    [FormatAttribute(Extension = ".obe", Description = "BlitzOBE")]
-    public class OBE : IModelFormat
+    public class OBE : I3DModelFormat
     {
+        public string Name => "Blitz OBE";
+        public string Extension => ".obe";
+        public string Description => "";
+        public bool CanOpen => true;
+        public bool CanSave => false;
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.Extension.Equals(Extension);
+        }
+
         private GenericSkeleton Skeleton { get; set; } = new GenericSkeleton();
 
         public List<GenericVertex> vertices = new List<GenericVertex>();

@@ -7,9 +7,24 @@ using OpenTK;
 
 namespace Metanoia.Formats.PSP
 {
-    [FormatAttribute(Extension = ".igb", Description = "Intrinsic Games Binary")]
-    public class IGB : IModelFormat
+    public class IGB : I3DModelFormat
     {
+        public string Name => "Intrinsic Games Binary";
+        public string Extension => ".igb";
+        public string Description => "";
+        public bool CanOpen => true;
+        public bool CanSave => false;
+
+        public void Save(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.Extension.Equals(Extension);
+        }
+
         private GenericSkeleton Skeleton = new GenericSkeleton();
         private GenericModel Model = new GenericModel();
 

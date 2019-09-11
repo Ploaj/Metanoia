@@ -1,7 +1,10 @@
-﻿using Metanoia.Formats;
+﻿using Metanoia.Exporting;
+using Metanoia.Formats;
+using Metanoia.Modeling;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Metanoia
 {
@@ -10,16 +13,24 @@ namespace Metanoia
         public static readonly FormatManager Instance = new FormatManager();
 
         private Dictionary<string, List<Type>> ExtensionToType = new Dictionary<string, List<Type>>();
+        
+        private List<IModelExporter> ModelExporters = new List<IModelExporter>();
 
         private List<Type> AllTypes = new List<Type>();
 
-        public string GetExtensionFilter()
-        {
-            return "Supported Files |*" + string.Join(";*", ExtensionToType.Keys.ToArray());
-        }
-
         public FormatManager()
         {
+            var modelExportTypes = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
+                         from assemblyType in domainAssembly.GetTypes()
+                         where typeof(IModelExporter).IsAssignableFrom(assemblyType)
+                         select assemblyType).ToArray();
+
+            foreach (var t in modelExportTypes)
+            {
+                if(t != typeof(IModelExporter))
+                    ModelExporters.Add((IModelExporter)Activator.CreateInstance(t));
+            }
+
             var Types = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
                          from assemblyType in domainAssembly.GetTypes()
                          where typeof(IFormat).IsAssignableFrom(assemblyType)
@@ -39,6 +50,37 @@ namespace Metanoia
                     ExtensionToType.Add(extension, new List<Type>());
                 ExtensionToType[extension].Add(t);
             }
+        }
+
+        public string GetModelExportFilter()
+        {
+            StringBuilder filter = new StringBuilder();
+
+            foreach (var v in ModelExporters)
+                filter.Append($"{v.Name()} (*{v.Extension()})|*{v.Extension()}|");
+            filter.Append("All files (*.*)|*.*");
+
+            return filter.ToString();
+        }
+
+        public bool ExportModel(string filePath, GenericModel m)
+        {
+            var ext = System.IO.Path.GetExtension(filePath).ToLower();
+
+            foreach (var v in ModelExporters)
+            {
+                if (v.Equals(ext))
+                {
+                    v.Export(filePath, m);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public string GetExtensionFilter()
+        {
+            return "Supported Files |*" + string.Join(";*", ExtensionToType.Keys.ToArray());
         }
 
         public IFormat Open(FileItem f)

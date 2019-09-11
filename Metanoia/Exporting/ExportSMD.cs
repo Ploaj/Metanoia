@@ -5,10 +5,24 @@ using System.Collections.Generic;
 
 namespace Metanoia.Exporting
 {
-    [ExportAttribute(Name = "Source Model", Extension = ".smd", ExportType = ExportType.Model)]
-    public class ExportSMD
+    public class ExportSMD : IModelExporter
     {
         public static void Save(string FilePath, GenericModel Model)
+        {
+            new ExportSMD().Export(FilePath, Model);
+        }
+
+        public string Name()
+        {
+            return "Source Model";
+        }
+
+        public string Extension()
+        {
+            return ".smd";
+        }
+
+        public void Export(string FilePath, GenericModel Model)
         {
             using (StreamWriter w = new StreamWriter(new FileStream(FilePath, FileMode.Create)))
             {

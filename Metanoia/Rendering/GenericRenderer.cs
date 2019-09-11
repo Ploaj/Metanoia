@@ -120,8 +120,7 @@ namespace Metanoia.Rendering
             GL.UniformMatrix4(GenericShader.GetAttributeLocation("mvp"), false, ref MVP);
             GL.Uniform1(GenericShader.GetAttributeLocation("renderMode"), (int)RenderMode);
             //GL.Uniform3(GenericShader.GetAttributeLocation("cameraPos"), Vector3.TransformPosition(Vector3.Zero, MVP));
-
-
+            
             GL.Uniform1(GenericShader.GetAttributeLocation("selectedBone"), -1);
             if(RenderMode == RenderMode.BoneWeight && Skeleton != null)
             {
@@ -151,10 +150,8 @@ namespace Metanoia.Rendering
             GL.VertexAttribPointer(GenericShader.GetAttributeLocation("weight"), 4, VertexAttribPointerType.Float, false, GenericVertex.Stride, 64);
 
             GL.Uniform1(GenericShader.GetAttributeLocation("dif"), 1);
-
             
             var transparentZSorted = new List<GenericMesh>();
-            var opaqueMesh = new List<GenericMesh>();
 
             transparentZSorted.AddRange(Model.Meshes);
 
@@ -165,8 +162,6 @@ namespace Metanoia.Rendering
             }).ToList();
 
             GL.PointSize(5f);
-
-            GL.Enable(EnableCap.CullFace);
 
             foreach (var mesh in transparentZSorted)
             {
@@ -211,8 +206,7 @@ namespace Metanoia.Rendering
             if (renderSkeleton && Skeleton != null)
             {
                 GL.Disable(EnableCap.DepthTest);
-
-
+                
                 foreach (GenericBone bone in Skeleton.Bones)
                 {
                     GL.Color3(1f, 0, 0);

@@ -7,10 +7,24 @@ using System.IO;
 
 namespace Metanoia.Exporting
 {
-    [ExportAttribute(Name = "Collada", Extension = ".dae", ExportType = ExportType.Model)]
-    public class ExportDAE
+    public class ExportDAE : IModelExporter
     {
         public static void Save(string FilePath, GenericModel Model)
+        {
+            new ExportDAE().Export(FilePath, Model);
+        }
+
+        public string Name()
+        {
+            return "Collada";
+        }
+
+        public string Extension()
+        {
+            return ".dae";
+        }
+
+        public void Export(string FilePath, GenericModel Model)
         {
             using (DAEWriter writer = new DAEWriter(FilePath, true))
             {

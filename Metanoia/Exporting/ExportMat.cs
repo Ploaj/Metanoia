@@ -3,10 +3,24 @@ using System.IO;
 
 namespace Metanoia.Exporting
 {
-    [ExportAttribute(Name = "Generic Material", Extension = ".mat", ExportType = ExportType.Model)]
-    public class ExportMat
+    public class ExportMat : IModelExporter
     {
         public static void Save(string FilePath, GenericModel Model)
+        {
+            new ExportMat().Export(FilePath, Model);
+        }
+
+        public string Name()
+        {
+            return "Generic Material";
+        }
+
+        public string Extension()
+        {
+            return ".mat";
+        }
+
+        public void Export(string FilePath, GenericModel Model)
         {
             using (StreamWriter w = new StreamWriter(new FileStream(FilePath, FileMode.Create)))
             {
