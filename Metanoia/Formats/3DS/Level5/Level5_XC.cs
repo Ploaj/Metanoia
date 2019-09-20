@@ -10,7 +10,7 @@ using OpenTK;
 
 namespace Metanoia.Formats._3DS.Level5
 {
-    public class Level5_XC : IContainerFormat
+    public class Level5_XC : I3DModelFormat
     {
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
 
