@@ -69,7 +69,7 @@ namespace Metanoia
 
             foreach (var v in ModelExporters)
             {
-                if (v.Equals(ext))
+                if (v.Extension().Equals(ext))
                 {
                     v.Export(filePath, m);
                     return true;

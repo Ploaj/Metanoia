@@ -10,9 +10,14 @@ using OpenTK;
 
 namespace Metanoia.Formats.GameCube
 {
-    [FormatAttribute(Extension = ".hsf", Description = "Mario Party Model")]
-    public class HSF : IModelFormat
+    public class HSF : I3DModelFormat
     {
+        public string Name => "Mario Party Model";
+        public string Extension => ".hsf";
+        public string Description => "";
+        public bool CanOpen => true;
+        public bool CanSave => false;
+
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct AttributeHeader
         {
@@ -737,6 +742,15 @@ namespace Metanoia.Formats.GameCube
 
 
             return m;
+        }
+
+        public bool Verify(FileItem file)
+        {
+            return file.Extension == Extension;
+        }
+
+        public void Save(string filePath)
+        {
         }
     }
 }
