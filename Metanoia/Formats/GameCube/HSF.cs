@@ -126,6 +126,8 @@ namespace Metanoia.Formats.GameCube
             public VertexGroup[] Vertices;
 
             public Vector3 UnknownVector;
+
+            public int TriCount = 0;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -240,10 +242,7 @@ namespace Metanoia.Formats.GameCube
                 ReadPositions(reader, reader.ReadStructArray<AttributeHeader>(positionCount), stringTableOffset);
 
                 reader.Position = normalOffset;
-                if (flag == 4)
-                    ReadColors(reader, reader.ReadStructArray<AttributeHeader>(normalCount), stringTableOffset);
-                else
-                    ReadNormals(reader, reader.ReadStructArray<AttributeHeader>(normalCount), stringTableOffset);
+                ReadNormals(reader, reader.ReadStructArray<AttributeHeader>(normalCount), stringTableOffset, flag);
 
                 reader.Position = uvOffset;
                 ReadUVs(reader, reader.ReadStructArray<AttributeHeader>(uvCount), stringTableOffset);
@@ -427,7 +426,7 @@ namespace Metanoia.Formats.GameCube
 
                     if (primOb.PrimitiveType == 2 || primOb.PrimitiveType == 3)
                         primCount = 4;
-
+                    
                     primOb.Vertices = reader.ReadStructArray<VertexGroup>(primCount);
                     
                     if (primOb.PrimitiveType == 4)
@@ -435,20 +434,17 @@ namespace Metanoia.Formats.GameCube
                         primCount = reader.ReadInt32();
                         var offset = reader.ReadUInt32();
                         
-                        var strip = new List<VertexGroup>();
-
-                        strip.Add(primOb.Vertices[0]);
-                        strip.Add(primOb.Vertices[1]);
-                        strip.Add(primOb.Vertices[2]);
-
-                        strip.Add(primOb.Vertices[1]);
-
                         var temp = reader.Position;
                         reader.Position = ExtOffset + offset * 8;
-                        strip.AddRange(reader.ReadStructArray<VertexGroup>(primCount));
+                        var verts = reader.ReadStructArray<VertexGroup>(primCount);
                         reader.Position = temp;
 
-                        primOb.Vertices = strip.ToArray();
+                        primOb.TriCount = primOb.Vertices.Length;
+                        var newVert = new VertexGroup[primOb.Vertices.Length + primCount + 1];
+                        Array.Copy(primOb.Vertices, 0, newVert, 0, primOb.Vertices.Length);
+                        newVert[3] = newVert[1];
+                        Array.Copy(verts, 0, newVert, primOb.Vertices.Length + 1, verts.Length);
+                        primOb.Vertices = newVert;
                     }
 
                     primOb.UnknownVector = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
@@ -502,9 +498,21 @@ namespace Metanoia.Formats.GameCube
             }
         }
 
-        private void ReadNormals(DataReader reader, AttributeHeader[] headers, uint stringTableOffset)
+        private void ReadNormals(DataReader reader, AttributeHeader[] headers, uint stringTableOffset, int flag)
         {
+            reader.PrintPosition();
             var startingOffset = reader.Position;
+            flag = 0;
+
+            if(headers.Length >= 2)
+            {
+                var pos = startingOffset + headers[0].DataOffset + headers[0].DataCount * 3;
+                if (pos % 0x20 != 0)
+                    pos += 0x20 - (pos % 0x20);
+                if (headers[1].DataOffset == pos - startingOffset)
+                    flag = 4;
+            }
+
             foreach (var att in headers)
             {
                 reader.Position = startingOffset + att.DataOffset;
@@ -512,9 +520,12 @@ namespace Metanoia.Formats.GameCube
                 var nrmList = new List<Vector3>();
                 for (int i = 0; i < att.DataCount; i++)
                 {
-                    var normal = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-                    nrmList.Add(normal);
+                    if (flag == 4)
+                        nrmList.Add(new Vector3(reader.ReadSByte() / (float)sbyte.MaxValue, reader.ReadSByte() / (float)sbyte.MaxValue, reader.ReadSByte() / (float)sbyte.MaxValue));
+                    else
+                        nrmList.Add(new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
                 }
+
                 MeshObjects[reader.ReadString(stringTableOffset + att.StringOffset, -1)].Normals = nrmList;
             }
         }
@@ -696,11 +707,8 @@ namespace Metanoia.Formats.GameCube
                             break;
                         case 0x04: // Triangle Strip
                             var verts = new List<GenericVertex>();
-                            for (uint t = 0; t < d.Vertices.Length; t++)
-                            {
-                                var vert = GetVertex(meshObject.Value, d.Vertices[t], skel);
-                                verts.Add(vert);
-                            }
+                            foreach (var dv in d.Vertices)
+                                verts.Add(GetVertex(meshObject.Value, dv, skel));
                             Tools.TriangleConverter.StripToList(verts, out verts);
 
                             vertices.AddRange(verts);

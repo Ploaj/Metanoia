@@ -396,7 +396,7 @@ namespace Metanoia.Formats.Misc
                     }
                 }
             }
-
+            
             return model;
         }
 

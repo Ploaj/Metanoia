@@ -118,7 +118,7 @@ namespace Metanoia.Rendering
         {
             get
             {
-                return Matrix4.CreatePerspectiveFieldOfView(1f, Width / (float)Height, 0.1f, 10000);
+                return Matrix4.CreatePerspectiveFieldOfView(1f, Width / (float)Height, 0.1f, 100000);
             }
         }
 
