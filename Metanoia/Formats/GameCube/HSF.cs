@@ -382,15 +382,22 @@ namespace Metanoia.Formats.GameCube
                         format = 14;
                         break;
                     case 0x09:
+                        palFormat = 1;
                         format = 9;
                         if (texInfo[i].Type2 == 4)
                             format = 8;
                         break;
                     case 0x0A:
-                        format = 8;
+                        palFormat = 2;
+                        format = 9;
+                        if (texInfo[i].Type2 == 4)
+                            format = 8;
                         break;
                     case 0x0B:
+                        palFormat = 1;
                         format = 9;
+                        if (texInfo[i].Type2 == 4)
+                            format = 8;
                         break;
                     default:
                         throw new NotSupportedException("Unsupported Texture Type " + texInfo[i].Type1 + " " + texInfo[i].Type2);
@@ -401,7 +408,6 @@ namespace Metanoia.Formats.GameCube
                 {
                     var pal = palInfo[texInfo[i].PaletteIndex];
                     palCount = pal.Count;
-                    palFormat = 1;
                     palData = reader.GetSection(palSectionOffset + pal.DataOffset, 2 * palCount);
                     Console.WriteLine((palSectionOffset + pal.DataOffset).ToString("X") + " " + (2 * palCount).ToString("X"));
                 }
@@ -599,8 +605,10 @@ namespace Metanoia.Formats.GameCube
             // Rigging
             Vector4 boneIndices = new Vector4(mesh.SingleBind, 0, 0, 0);
             Vector4 weight = new Vector4(1, 0, 0, 0);
-            
-            var Position = mesh.Positions[g.PositionIndex];
+
+            var Position = Vector3.Zero;
+            if(g.PositionIndex < mesh.Positions.Count)
+                Position = mesh.Positions[g.PositionIndex];
             
             var bone = skeleton.Bones.Find(e => e.Name.Equals(mesh.Name));
             if (bone != null)
