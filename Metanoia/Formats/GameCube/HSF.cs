@@ -350,7 +350,7 @@ namespace Metanoia.Formats.GameCube
             for(int i = 0; i < texInfo.Length; i++)
             {
                 var textureName = reader.ReadString(stringTableOffset + texInfo[i].NameOffset, -1);
-                Console.WriteLine($"{textureName} {texInfo[i].Type1} {texInfo[i].Width} {texInfo[i].Height}");
+                Console.WriteLine($"{textureName} {texInfo[i].Type1} {texInfo[i].Type2} {texInfo[i].PaletteIndex} {texInfo[i].Width} {texInfo[i].Height} {(startOffset + texInfo[i].DataOffset).ToString("X")}");
 
                 var format = texInfo[i].Type1;
 
@@ -358,18 +358,42 @@ namespace Metanoia.Formats.GameCube
                 var palFormat = 0;
                 var palCount = 0;
 
-                if (texInfo[i].Type1 == 0x07) // CMP
+                switch (texInfo[i].Type1)
                 {
-                    format = 14;
-                }
-                if (texInfo[i].Type1 == 0x09) // CMP
-                {
-                    if(texInfo[i].Type2 == 4)
+                    case 0x00:
+                        format = 0;
+                        break;
+                    case 0x01:
+                        format = 1;
+                        break;
+                    case 0x03:
+                        format = 3;
+                        break;
+                    case 0x04:
+                        format = 4;
+                        break;
+                    case 0x05:
+                        format = 5;
+                        break;
+                    case 0x06:
+                        format = 6;
+                        break;
+                    case 0x07:
+                        format = 14;
+                        break;
+                    case 0x09:
+                        format = 9;
+                        if (texInfo[i].Type2 == 4)
+                            format = 8;
+                        break;
+                    case 0x0A:
                         format = 8;
-                }
-                if (texInfo[i].Type1 == 0x0A) // CMP
-                {
-                        format = 8;
+                        break;
+                    case 0x0B:
+                        format = 9;
+                        break;
+                    default:
+                        throw new NotSupportedException("Unsupported Texture Type " + texInfo[i].Type1 + " " + texInfo[i].Type2);
                 }
 
                 //var pal = palInfo.ToList().Find(e => e.NameOffset == texInfo[i].NameOffset);
@@ -377,8 +401,9 @@ namespace Metanoia.Formats.GameCube
                 {
                     var pal = palInfo[texInfo[i].PaletteIndex];
                     palCount = pal.Count;
-                    palFormat = 0;
+                    palFormat = 1;
                     palData = reader.GetSection(palSectionOffset + pal.DataOffset, 2 * palCount);
+                    Console.WriteLine((palSectionOffset + pal.DataOffset).ToString("X") + " " + (2 * palCount).ToString("X"));
                 }
 
                 var dataLength =
@@ -406,12 +431,16 @@ namespace Metanoia.Formats.GameCube
             {
                 ExtOffset += att.DataCount * 48;
             }
+            int index = 0;
             foreach (var att in headers)
             {
                 var primName = reader.ReadString(stringTableOffset + att.StringOffset, -1);
                 var meshObject = new MeshObject();
                 meshObject.Name = primName;
+                if (MeshObjects.ContainsKey(primName))
+                    continue;
                 MeshObjects.Add(primName, meshObject);
+                index++;
 
                 reader.Position = startingOffset + att.DataOffset;
                 for (int i = 0; i < att.DataCount; i++)
@@ -483,6 +512,7 @@ namespace Metanoia.Formats.GameCube
         private void ReadPositions(DataReader reader, AttributeHeader[] headers, uint stringTableOffset)
         {
             var startingOffset = reader.Position;
+            int index = 0;
             foreach (var att in headers)
             {
                 reader.Position = startingOffset + att.DataOffset;
@@ -492,7 +522,12 @@ namespace Metanoia.Formats.GameCube
                 {
                     posList.Add(new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
                 }
-                MeshObjects[reader.ReadString(stringTableOffset + att.StringOffset, -1)].Positions = posList;
+
+                var name = reader.ReadString(stringTableOffset + att.StringOffset, -1);
+                if (!MeshObjects.ContainsKey(name))
+                    MeshObjects.Add(name, new MeshObject() { Name = name });
+                MeshObjects[name].Positions.AddRange(posList);
+                index++;
 
                 //Console.WriteLine(reader.ReadString(stringTableOffset + att.StringOffset, -1) + " " + (startingOffset + att.DataOffset).ToString("X") + " " +  reader.Position.ToString("X"));
             }
@@ -513,6 +548,7 @@ namespace Metanoia.Formats.GameCube
                     flag = 4;
             }
 
+            int index = 0;
             foreach (var att in headers)
             {
                 reader.Position = startingOffset + att.DataOffset;
@@ -525,30 +561,17 @@ namespace Metanoia.Formats.GameCube
                     else
                         nrmList.Add(new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
                 }
-
-                MeshObjects[reader.ReadString(stringTableOffset + att.StringOffset, -1)].Normals = nrmList;
+                var name = reader.ReadString(stringTableOffset + att.StringOffset, -1);
+                MeshObjects[name].Normals.AddRange(nrmList);
+                index++;
             }
         }
-
-        private void ReadColors(DataReader reader, AttributeHeader[] headers, uint stringTableOffset)
-        {
-            var startingOffset = reader.Position;
-            foreach (var att in headers)
-            {
-                reader.Position = startingOffset + att.DataOffset;
-
-                var clrList = new List<Vector4>();
-                for (int i = 0; i < att.DataCount; i++)
-                {
-                    clrList.Add(new Vector4(reader.ReadSByte() / (float)sbyte.MaxValue, reader.ReadSByte() / (float)sbyte.MaxValue, reader.ReadSByte() / (float)sbyte.MaxValue, 1));
-                }
-                MeshObjects[reader.ReadString(stringTableOffset + att.StringOffset, -1)].Colors = clrList;
-            }
-        }
-
+        
         private void ReadUVs(DataReader reader, AttributeHeader[] headers, uint stringTableOffset)
         {
             var startingOffset = reader.Position;
+            int index = 0;
+            HashSet<string> exists = new HashSet<string>();
             foreach (var att in headers)
             {
                 reader.Position = startingOffset + att.DataOffset;
@@ -558,7 +581,13 @@ namespace Metanoia.Formats.GameCube
                 {
                     posList.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
                 }
-                MeshObjects[reader.ReadString(stringTableOffset + att.StringOffset, -1)].UVs = posList;
+                var name = reader.ReadString(stringTableOffset + att.StringOffset, -1);
+                
+                if (MeshObjects.ContainsKey(name))
+                {
+                    MeshObjects[name].UVs.AddRange(posList);
+                    index++;
+                }
 
                 //Console.WriteLine(reader.ReadString(stringTableOffset + att.StringOffset, -1) + " " + (startingOffset + att.DataOffset).ToString("X") + " " +  reader.Position.ToString("X"));
             }
@@ -570,7 +599,7 @@ namespace Metanoia.Formats.GameCube
             // Rigging
             Vector4 boneIndices = new Vector4(mesh.SingleBind, 0, 0, 0);
             Vector4 weight = new Vector4(1, 0, 0, 0);
-
+            
             var Position = mesh.Positions[g.PositionIndex];
             
             var bone = skeleton.Bones.Find(e => e.Name.Equals(mesh.Name));
@@ -627,13 +656,13 @@ namespace Metanoia.Formats.GameCube
             var Normal = Vector3.Zero;
             var Color = Vector4.One;
 
-            if (mesh.Normals.Count > 0)
+            if (mesh.Normals.Count > 0 && g.NormalIndex < mesh.Normals.Count)
                 Normal = mesh.Normals[g.NormalIndex];
 
             if (mesh.Colors.Count > 0)
                 Normal = mesh.Colors[g.NormalIndex].Xyz;
 
-            if (g.UVIndex > 0 && mesh.UVs.Count > 0)
+            if (g.UVIndex >= 0 && mesh.UVs.Count > 0 && g.UVIndex < mesh.UVs.Count)
                 uv = mesh.UVs[g.UVIndex];
 
             return new GenericVertex()
@@ -668,11 +697,12 @@ namespace Metanoia.Formats.GameCube
             m.Skeleton = skel;
 
             // Textures
+            var tindex = 0;
             foreach (var tex in Textures)
             {
                 if (m.TextureBank.ContainsKey(tex.Name))
                 {
-                    tex.Name += "_+";
+                    tex.Name += "_" + tindex++;
                 }
                 m.TextureBank.Add(tex.Name, tex);
             }
@@ -707,6 +737,7 @@ namespace Metanoia.Formats.GameCube
                             break;
                         case 0x04: // Triangle Strip
                             var verts = new List<GenericVertex>();
+
                             foreach (var dv in d.Vertices)
                                 verts.Add(GetVertex(meshObject.Value, dv, skel));
                             Tools.TriangleConverter.StripToList(verts, out verts);
