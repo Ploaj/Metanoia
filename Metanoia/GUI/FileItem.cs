@@ -31,6 +31,21 @@ namespace Metanoia
             }
         }
 
+
+        public uint Magic
+        {
+            get
+            {
+                using (DataReader r = new DataReader(this))
+                {
+                    r.BigEndian = true;
+                    if (r.Length < 4)
+                        return 0;
+                    return r.ReadUInt32();
+                }
+            }
+        }
+
         public string Extension { get; internal set; }
 
         public long Length { get; internal set; }

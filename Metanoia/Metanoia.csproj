@@ -117,6 +117,7 @@
     <Compile Include="Formats\PS3\LBP_MOL.cs" />
     <Compile Include="Formats\PSP\IGB.cs" />
     <Compile Include="Formats\Unity\UnityMesh.cs" />
+    <Compile Include="Formats\WiiU\BNFM.cs" />
     <Compile Include="GUI\ExploreContainer.cs">
       <SubType>Form</SubType>
     </Compile>
