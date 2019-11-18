@@ -33,7 +33,8 @@ namespace Metanoia.Formats._3DS.Level5
             data = Decompress.Level5Decom(data);
             using (DataReader r = new DataReader(new System.IO.MemoryStream(data)))
             {
-                if (new string(r.ReadChars(6)) != "CHRC00")
+                var magic = new string(r.ReadChars(6));
+                if (magic != "CHRC00" && magic != "CHRN01")
                     throw new FormatException("RES file is corrupt");
 
                 // -----------------------

@@ -82,6 +82,7 @@
     <Compile Include="Exporting\ExportSMD.cs" />
     <Compile Include="FormatManager.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_MBN.cs" />
+    <Compile Include="Formats\3DS\Level5\Level5_MTN2.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_PRM.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_Res.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_XC.cs" />
@@ -136,8 +137,11 @@
     <Compile Include="GUI\ModelInfoPanel.Designer.cs">
       <DependentUpon>ModelInfoPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="Modeling\GenericAnimation.cs" />
+    <Compile Include="Modeling\GenericKeyGroup.cs" />
     <Compile Include="Modeling\GenericMorph.cs" />
     <Compile Include="Modeling\GenericTexture.cs" />
+    <Compile Include="Modeling\GenericAnimationTransform.cs" />
     <Compile Include="Rendering\Buffer.cs" />
     <Compile Include="Rendering\GenericRenderer.cs" />
     <Compile Include="Rendering\RenderTexture.cs" />

@@ -16,6 +16,8 @@ namespace Metanoia
         
         private List<IModelExporter> ModelExporters = new List<IModelExporter>();
 
+        private List<string> AnimationExtensions = new List<string>();
+
         private List<Type> AllTypes = new List<Type>();
 
         public FormatManager()
@@ -40,6 +42,9 @@ namespace Metanoia
             {
                 if (t.IsInterface)
                     continue;
+
+                if (t is IAnimationFormat an)
+                    AnimationExtensions.Add(an.Extension);
 
                 AllTypes.Add(t);
 
@@ -81,6 +86,11 @@ namespace Metanoia
         public string GetExtensionFilter()
         {
             return "Supported Files |*" + string.Join(";*", ExtensionToType.Keys.ToArray());
+        }
+
+        public string GetAnimationExtensionFilter()
+        {
+            return "Supported Files |*" + string.Join(";*", AnimationExtensions);
         }
 
         public IFormat Open(FileItem f)

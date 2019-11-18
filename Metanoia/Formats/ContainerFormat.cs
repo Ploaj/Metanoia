@@ -37,4 +37,9 @@ namespace Metanoia.Formats
     {
 
     }
+
+    public interface IAnimationFormat : IFormat
+    {
+        GenericAnimation ToGenericAnimation();
+    }
 }

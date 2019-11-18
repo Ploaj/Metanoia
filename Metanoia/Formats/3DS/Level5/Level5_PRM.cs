@@ -90,7 +90,7 @@ namespace Metanoia.Formats._3DS.Level5
             List<uint> Indices = new List<uint>();
             int PrimitiveType = 0;
             int FaceCount = 0;
-            System.IO.File.WriteAllBytes("IndexBuffer.bin", buffer);
+
             using (DataReader r = new DataReader(new System.IO.MemoryStream(buffer)))
             {
                 r.Seek(0x04);
@@ -101,9 +101,17 @@ namespace Metanoia.Formats._3DS.Level5
                 buffer = Decompress.Level5Decom(r.GetSection(faceOffset, (int)(r.Length - faceOffset)));
             }
 
-            if (PrimitiveType != 2)
+            if (PrimitiveType != 2 && PrimitiveType != 0)
                 throw new NotSupportedException("Primitve Type no implemented");
 
+            if (PrimitiveType == 0)
+                using (DataReader r = new DataReader(new System.IO.MemoryStream(buffer)))
+                {
+                    r.Seek(0);
+                    for (int i = 0; i < FaceCount / 2; i++)
+                        Indices.Add(r.ReadUInt16());
+                }
+            if (PrimitiveType == 2)
             using (DataReader r = new DataReader(new System.IO.MemoryStream(buffer)))
             {
                 //Console.WriteLine(PrimitiveType + " " + FaceCount + " " + r.BaseStream.Length / 2);
@@ -153,6 +161,8 @@ namespace Metanoia.Formats._3DS.Level5
                     }
                 }
             }
+
+
             return Indices;
         }
 

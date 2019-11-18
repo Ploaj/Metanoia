@@ -7,11 +7,33 @@ namespace Metanoia.Tools
 {
     public class Decompress
     {
+        public static bool CheckLevel5Zlib(byte[] input, out byte[] t)
+        {
+            var b = input;
+            t = input;
+            if (b.Length >= 6)
+            {
+                var decomLength = (b[0] & 0xFF) | ((b[1] & 0xFF) << 8) | ((b[2] & 0xFF) << 16) | ((b[3] & 0xFF) << 24);
+                if (b[4] == 0x78)
+                {
+                    t = new byte[b.Length - 4];
+                    Array.Copy(b, 4, t, 0, b.Length - 4);
+                    t = ZLIB(t);
+                    Console.WriteLine("ZLIB: " + decomLength.ToString("X") + " " + t.Length.ToString("X"));
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static byte[] Level5Decom(byte[] b)
         {
             int tableType = (b[0] & 0xFF);
 
             byte[] t;
+
+            if (CheckLevel5Zlib(b, out t))
+                return t;
 
             switch (tableType & 0xF)
             {

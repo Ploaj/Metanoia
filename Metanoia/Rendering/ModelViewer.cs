@@ -7,6 +7,7 @@ using Metanoia.Modeling;
 using Metanoia.GUI;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using Metanoia.Formats;
 
 namespace Metanoia.Rendering
 {
@@ -128,6 +129,34 @@ namespace Metanoia.Rendering
         private bool ShowBones = true;
 
 
+        private int Frame
+        {
+            get
+            {
+                return _frame;
+            }
+            set
+            {
+                _frame = value;
+                frameLabel.Text = $"Frame: {_frame} / {MaxFrame}";
+            }
+        }
+        private int _frame = 0;
+
+        private int MaxFrame
+        {
+            get
+            {
+                return _maxFrame;
+            }
+            set
+            {
+                _maxFrame = value;
+                frameLabel.Text = $"Frame: {Frame} / {_maxFrame}";
+            }
+        }
+        private int _maxFrame = 0;
+
         private GenericModel Model { get; set; }
 
         public ModelViewer()
@@ -139,6 +168,8 @@ namespace Metanoia.Rendering
                 renderMode.ComboBox.Items.Add(value);
             }
             renderMode.ComboBox.SelectedIndex = 0;
+
+            animationTS.Visible = false;
         }
 
         private void UpdateCamera()
@@ -203,6 +234,24 @@ namespace Metanoia.Rendering
 
             Model = model;
             ModelPanel.SetModel(model);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void EnableAnimation()
+        {
+            animationTS.Visible = true;
+            Frame = 0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void AddAnimation(GenericAnimation animation)
+        {
+            animationCB.Items.Add(animation);
+            EnableAnimation();
         }
 
         public void RefreshRender()
@@ -396,6 +445,46 @@ namespace Metanoia.Rendering
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void importAnimationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog d = new OpenFileDialog())
+            {
+                d.Filter = FormatManager.Instance.GetAnimationExtensionFilter();
+                
+                if (d.ShowDialog() == DialogResult.OK)
+                {
+                    if(FormatManager.Instance.Open(new FileItem(d.FileName)) is IAnimationFormat anim)
+                    {
+                        AddAnimation(anim.ToGenericAnimation());
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void animationCB_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(animationCB.SelectedItem is GenericAnimation anim)
+            {
+                MaxFrame = anim.FrameCount;
+                
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Viewport_MouseMove(object sender, MouseEventArgs e)
         {
             var camPos = Vector3.TransformPosition(Vector3.Zero, Camera);

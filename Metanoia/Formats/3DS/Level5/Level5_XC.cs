@@ -59,7 +59,6 @@ namespace Metanoia.Formats._3DS.Level5
                 for(int i = 0; i < fileCount; i++)
                 {
                     var nameCRC = r.ReadUInt32();
-                    Console.WriteLine(nameCRC.ToString("X"));
                     r.ReadInt16();
                     var offset = (uint)r.ReadUInt16();
                     var size = (uint)r.ReadUInt16();
@@ -69,16 +68,22 @@ namespace Metanoia.Formats._3DS.Level5
                     offset |= offsetExt << 16;
                     size |= sizeExt << 16;
                     offset = (uint)(offset * 4 + dataOffset);
+
+                    var data = r.GetSection(offset, (int)size);
+                    //Decompress.CheckLevel5Zlib(data, out data);
                     
-                    hashToData.Add(nameCRC, r.GetSection(offset, (int)size));
+                    hashToData.Add(nameCRC, data);
                 }
-                
-                var nameTable = Decompress.lzss_Decompress(r.GetSection((uint)fileTableOffset, filenameTableSize));
+
+                byte[] nameTable = r.GetSection((uint)fileTableOffset, filenameTableSize);
+                if(!Decompress.CheckLevel5Zlib(nameTable, out nameTable))
+                    nameTable = Decompress.lzss_Decompress(nameTable);
                 using (DataReader nt = new DataReader(new MemoryStream(nameTable)))
                 {
                     for (int i = 0; i < fileCount; i++)
                     {
                         var name = nt.ReadString();
+
                         if(hashToData.ContainsKey(CRC32.Crc32C(name)))
                             Files.Add(name, hashToData[CRC32.Crc32C(name)]);
                         else
@@ -107,7 +112,7 @@ namespace Metanoia.Formats._3DS.Level5
             
             foreach(var f in Files)
             {
-                Console.WriteLine(f.Key);
+                //Console.WriteLine(f.Key);
                 if (f.Key.EndsWith("RES.bin"))
                 {
                     resourceFile = new Level5_Resource(f.Value);
@@ -126,13 +131,7 @@ namespace Metanoia.Formats._3DS.Level5
                 }
                 if (f.Key.EndsWith(".xi"))
                 {
-                    var texture = Level5_XI.ToBitmap(f.Value);
-
-                    GenericTexture tex = new GenericTexture();
-                    tex.FromBitmap(texture);
-
-                    texture.Dispose();
-
+                    var tex = Level5_XI.ToGenericTexture(f.Value);
                     tex.Name = f.Key;
                     textureList.Add(tex);
                 }

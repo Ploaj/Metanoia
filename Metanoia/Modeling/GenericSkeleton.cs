@@ -36,6 +36,11 @@ namespace Metanoia.Modeling
             }
         }
 
+        public GenericBone GetBoneByName(string name)
+        {
+            return Bones.Find(e => e.Name == name);
+        }
+
         private void GetBreathFirst(GenericBone bone, List<GenericBone> bones)
         {
             bones.Add(bone);
@@ -134,6 +139,8 @@ namespace Metanoia.Modeling
         
         public bool Selected = false;
 
+        public Matrix4 AnimatedTransform = Matrix4.Identity;
+
         [ReadOnly(true), Category("Transforms")]
         public Vector3 Position { get; set; }
 
@@ -154,7 +161,7 @@ namespace Metanoia.Modeling
             }
             set
             {
-                Rotation = ToEulerAngles(value);
+                Rotation = ToEulerAngles(Matrix4.CreateFromQuaternion(value));
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using Metanoia.Tools;
+﻿using Metanoia.Modeling;
+using Metanoia.Tools;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -19,7 +20,28 @@ namespace Metanoia.Formats._3DS.Level5
 
         public byte[] ImageData { get; set; }
 
-        public static Bitmap ToBitmap(byte[] xifile)
+        public static GenericTexture ToGenericTexture(byte[] xifile)
+        {
+            GenericTexture tex = new GenericTexture();
+            Level5_XI xi = new Level5_XI();
+            xi.Open(xifile);
+            if (xi.ImageFormat == 0x1D)
+            {
+                tex.Mipmaps.Add(xi.BuildImageDataFromBlock(8)[0]);
+                tex.InternalFormat = OpenTK.Graphics.OpenGL.PixelInternalFormat.CompressedRgbS3tcDxt1Ext;
+                tex.Width = (uint)xi.Height;
+                tex.Height = (uint)xi.Width; 
+            }
+            else
+            {
+                var texture = xi.ToBitmap();
+                tex.FromBitmap(texture);
+                texture.Dispose();
+            }
+            return tex;
+        }
+
+        private static Bitmap ToBitmap(byte[] xifile)
         {
             Level5_XI xi = new Level5_XI();
             xi.Open(xifile);
@@ -34,6 +56,9 @@ namespace Metanoia.Formats._3DS.Level5
                 Height = r.ReadInt16();
                 Width = r.ReadInt16();
 
+                r.Seek(0xA);
+                int type = r.ReadByte();
+
                 r.Seek(0x1C);
                 int someTable = r.ReadInt16();
 
@@ -43,20 +68,19 @@ namespace Metanoia.Formats._3DS.Level5
                 int imageDataOffset = someTable + someTableSize;
 
                 byte[] _tileData = Decompress.Level5Decom(r.GetSection((uint)someTable, someTableSize));
-
+                
                 using (DataReader tileData = new DataReader(new MemoryStream(_tileData)))
                 {
                     int tileCount = 0;
                     while (tileData.Position + 2 <= tileData.BaseStream.Length)
                     {
-                        int i = tileData.ReadInt16();
+                        int i = type == 0x1D ? tileData.ReadInt32() : tileData.ReadInt16();
                         if (i > tileCount) tileCount = i;
                         Tiles.Add(i);
                     }
                 }
 
-                r.Seek(0xA);
-                int type = r.ReadByte(); switch (type)
+                switch (type)
                 {
                     case 0x1:
                         type = 0x4;
@@ -73,15 +97,45 @@ namespace Metanoia.Formats._3DS.Level5
                     case 0x1C:
                         type = 0xD;
                         break;
+                    case 0x1D:
+                        break;
                     default:
                         throw new Exception("Unknown Texture Type " + type.ToString("x"));
                         //break;
                 }
+
                 ImageFormat = (byte)type;
 
                 ImageData = Decompress.Level5Decom(r.GetSection((uint)imageDataOffset, (int)(r.BaseStream.Length - imageDataOffset)));
-                
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="blockSize"></param>
+        /// <returns></returns>
+        private List<byte[]> BuildImageDataFromBlock(int blockSize)
+        {
+            List<byte[]> pixels = new List <byte[]>();
+
+            var mip1 = new byte[Width * Height * (blockSize / 8) / 2];
+
+            for (int i = 2; i < Tiles.Count; i++)
+            {
+                int code = Tiles[i];
+
+                // only need the first mip for now really...
+                if ((i - 2) * 32 + 32 > mip1.Length)
+                    break;
+
+                for (int h = 0; h < 32; h++)
+                    mip1[(i - 2) * 32 + h] = ImageData[code * 32 + h];
+            }
+
+            pixels.Add(mip1);
+
+            return pixels;
         }
 
         public Bitmap ToBitmap()

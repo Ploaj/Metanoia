@@ -12,11 +12,14 @@ namespace Metanoia.Formats._3DS.Level5
                 bone.ParentIndex = r.ReadInt32();
                 r.Skip(4);
 
+                r.Seek(0xC);
                 bone.Position = new OpenTK.Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-                r.Skip(4);
-                bone.QuaternionRotation = new OpenTK.Quaternion(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-                r.Skip(12);
-                //scale?
+                var rot = new OpenTK.Matrix3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(),
+                    r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), 
+                    r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+                bone.QuaternionRotation = rot.ExtractRotation().Inverted();
+                bone.Scale = new OpenTK.Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+                
             }
             return bone;
         }
