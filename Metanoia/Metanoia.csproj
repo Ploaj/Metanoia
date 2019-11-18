@@ -172,6 +172,7 @@
     </Compile>
     <Compile Include="Tools\Decompress.cs" />
     <Compile Include="Tools\FileTools.cs" />
+    <Compile Include="Tools\ImageTools.cs" />
     <Compile Include="Tools\LibWii\Shared.cs" />
     <Compile Include="Tools\TLP.cs" />
     <Compile Include="Tools\TriangleConverter.cs" />
