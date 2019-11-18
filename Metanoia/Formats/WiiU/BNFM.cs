@@ -106,6 +106,8 @@ namespace Metanoia.Formats.WiiU
                 {
                     GenericMaterial mat = new GenericMaterial();
 
+                    r.PrintPosition();
+
                     var name = r.ReadString(r.ReadUInt32(), -1);
                     if (name == "")
                         name = "null";
@@ -115,6 +117,11 @@ namespace Metanoia.Formats.WiiU
 
                     if (Generic.MaterialBank.ContainsKey(name))
                         name += "_" + i;
+
+                    if (!Generic.TextureBank.ContainsKey(mat.TextureDiffuse))
+                    {
+                        Generic.TextureBank.Add(mat.TextureDiffuse, new GenericTexture() { Name = mat.TextureDiffuse });
+                    }
 
                     Generic.MaterialBank.Add(name, mat);
                 }

@@ -115,6 +115,8 @@ namespace Metanoia.Formats._3DS.Level5
                 int startdir = -1;
                 for (int i = 0; i < FaceCount - 2; i++)
                 {
+                    if (r.Position + 2 > r.Length)
+                        break;
                     //if (r.Position + 2 > r.Length)
                     //    break;
                     f3 = r.ReadInt16();

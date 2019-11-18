@@ -58,6 +58,9 @@ namespace Metanoia.Exporting
                 Dictionary<GenericTexture, string> TextureBank = new Dictionary<GenericTexture, string>();
                 foreach (GenericMesh m in Model.Meshes)
                 {
+                    if (!m.Export)
+                        continue;
+
                     var meshIndex = Model.Skeleton.Bones.Count + Model.Meshes.IndexOf(m);
                     m.MakeTriangles();
                     string MaterialName = m.Name;
@@ -74,10 +77,14 @@ namespace Metanoia.Exporting
                             else
                             {
                                 string TextureName = material.TextureDiffuse.Equals("") ? "Texture_" + TextureBank.Count + ".png" : material.TextureDiffuse + ".png";
-                                Rendering.RenderTexture Temp = new Rendering.RenderTexture();
-                                Temp.LoadGenericTexture(texture);
-                                Temp.ExportPNG(new FileInfo(FilePath).Directory.FullName + "/" + TextureName);
-                                Temp.Delete();
+
+                                if(texture.Mipmaps.Count != 0)
+                                {
+                                    Rendering.RenderTexture Temp = new Rendering.RenderTexture();
+                                    Temp.LoadGenericTexture(texture);
+                                    Temp.ExportPNG(new FileInfo(FilePath).Directory.FullName + "/" + TextureName);
+                                    Temp.Delete();
+                                }
                                 TextureBank.Add(texture, TextureName);
                                 MaterialName = TextureName;
                             }

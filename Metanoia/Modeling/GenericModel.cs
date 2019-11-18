@@ -112,6 +112,9 @@ namespace Metanoia.Modeling
         [Category("Rendering")]
         public bool Visible { get; set; } = true;
 
+        [Category("Exporting")]
+        public bool Export { get; set; } = true;
+
         private bool CalculatedBounding = false;
         private Vector4 Bounding = Vector4.Zero;
 

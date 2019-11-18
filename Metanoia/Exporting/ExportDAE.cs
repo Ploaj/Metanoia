@@ -26,7 +26,7 @@ namespace Metanoia.Exporting
 
         public void Export(string FilePath, GenericModel Model)
         {
-            using (DAEWriter writer = new DAEWriter(FilePath, true))
+            using (DAEWriter writer = new DAEWriter(FilePath, false))
             {
                 var path = System.IO.Path.GetDirectoryName(FilePath) + '\\';
 
@@ -40,10 +40,14 @@ namespace Metanoia.Exporting
                     foreach (var tex in Model.TextureBank)
                     {
                         TextureNames.Add(tex.Key);
-                        Rendering.RenderTexture Temp = new Rendering.RenderTexture();
-                        Temp.LoadGenericTexture(tex.Value);
-                        Temp.ExportPNG(new FileInfo(FilePath).Directory.FullName + "/" + tex.Key + ".png");
-                        Temp.Delete();
+
+                        if(tex.Value.Mipmaps.Count != 0)
+                        {
+                            Rendering.RenderTexture Temp = new Rendering.RenderTexture();
+                            Temp.LoadGenericTexture(tex.Value);
+                            Temp.ExportPNG(new FileInfo(FilePath).Directory.FullName + "/" + tex.Key + ".png");
+                            Temp.Delete();
+                        }
                     }
 
                     writer.WriteLibraryImages(TextureNames.ToArray(), ".png");
@@ -92,6 +96,9 @@ namespace Metanoia.Exporting
                 writer.StartGeometrySection();
                 foreach(var mesh in Model.Meshes)
                 {
+                    if (!mesh.Export)
+                        continue;
+
                     mesh.MakeTriangles();
 
                     writer.StartGeometryMesh(mesh.Name);

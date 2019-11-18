@@ -173,7 +173,7 @@ namespace Metanoia.Rendering
                     var material = Model.GetMaterial(mesh);
                     if(material != null)
                     {
-                        if (material.TextureDiffuse != null && Textures.ContainsKey(material.TextureDiffuse))
+                        if (material.TextureDiffuse != null && Textures.ContainsKey(material.TextureDiffuse) && Textures[material.TextureDiffuse].Loaded)
                         {
                             Textures[material.TextureDiffuse].SetFromMaterial(Model.GetMaterial(mesh));
                             GL.Uniform1(GenericShader.GetAttributeLocation("hasDif"), 1);

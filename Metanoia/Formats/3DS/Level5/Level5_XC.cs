@@ -45,8 +45,7 @@ namespace Metanoia.Formats._3DS.Level5
                 if (!new string(r.ReadChars(4)).Equals("XPCK"))
                     throw new Exception("File header error");
 
-                uint fileCount = r.ReadByte();
-                r.ReadByte();
+                uint fileCount = (uint)(r.ReadUInt16() & 0xFFF);
                 
                 var fileInfoOffset = r.ReadUInt16() * 4;
                 var fileTableOffset = r.ReadUInt16() * 4;
@@ -60,6 +59,7 @@ namespace Metanoia.Formats._3DS.Level5
                 for(int i = 0; i < fileCount; i++)
                 {
                     var nameCRC = r.ReadUInt32();
+                    Console.WriteLine(nameCRC.ToString("X"));
                     r.ReadInt16();
                     var offset = (uint)r.ReadUInt16();
                     var size = (uint)r.ReadUInt16();

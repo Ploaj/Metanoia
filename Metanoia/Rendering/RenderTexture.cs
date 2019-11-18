@@ -14,6 +14,8 @@ namespace Metanoia.Rendering
 
         public float Width, Height;
 
+        public bool Loaded { get; internal set; } = false;
+
         public RenderTexture()
         {
             GL.GenTextures(1, out GLID);
@@ -56,6 +58,9 @@ namespace Metanoia.Rendering
 
         public void LoadGenericTexture(GenericTexture Texture)
         {
+            if (Texture.Mipmaps.Count == 0)
+                return;
+
             GL.BindTexture(TextureTarget.Texture2D, GLID);
 
             //todo: compressed
@@ -84,6 +89,8 @@ namespace Metanoia.Rendering
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
 
             GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+
+            Loaded = true;
         }
     }
 }
