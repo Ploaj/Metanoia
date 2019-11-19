@@ -125,7 +125,7 @@ namespace Metanoia.Formats.PSP
                 if(model.SingleBindBone != null && model.SingleBindBone != "")
                 {
                     var singleBone = Skeleton.Bones.Find(e => e.Name.Equals(model.SingleBindBone));
-                    var singleBindTransform = Skeleton.GetBoneTransform(singleBone);
+                    var singleBindTransform = Skeleton.GetWorldTransform(singleBone);
                     var singleBindIndex = Skeleton.Bones.IndexOf(singleBone);
                     for (int i = 0; i < m.VertexCount;i++)
                     {

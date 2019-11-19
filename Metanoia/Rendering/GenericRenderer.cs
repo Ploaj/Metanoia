@@ -120,6 +120,10 @@ namespace Metanoia.Rendering
             GL.UniformMatrix4(GenericShader.GetAttributeLocation("mvp"), false, ref MVP);
             GL.Uniform1(GenericShader.GetAttributeLocation("renderMode"), (int)RenderMode);
             //GL.Uniform3(GenericShader.GetAttributeLocation("cameraPos"), Vector3.TransformPosition(Vector3.Zero, MVP));
+
+            var t = Skeleton.GetBindTransforms();
+            if(t.Length > 0)
+                GL.UniformMatrix4(GenericShader.GetAttributeLocation("bones"), t.Length, false, ref t[0].Row0.X);
             
             GL.Uniform1(GenericShader.GetAttributeLocation("selectedBone"), -1);
             if(RenderMode == RenderMode.BoneWeight && Skeleton != null)
@@ -209,19 +213,19 @@ namespace Metanoia.Rendering
                 
                 foreach (GenericBone bone in Skeleton.Bones)
                 {
-                    GL.Color3(1f, 0, 0);
-                    GL.PointSize(10f);
+                    GL.Color3(1f, 0.5f, 0.5f);
+                    GL.PointSize(5f);
                     if (bone.Selected)
                     {
-                        GL.Color3(0, 1f, 0);
-                        GL.PointSize(20f);
+                        GL.Color3(0.5f, 1f, 0.5f);
+                        GL.PointSize(10f);
                     }
                     GL.Begin(PrimitiveType.Points);
-                    GL.Vertex3(Vector3.TransformPosition(Vector3.Zero, Skeleton.GetBoneTransform(bone)));
+                    GL.Vertex3(Vector3.TransformPosition(Vector3.Zero, Skeleton.GetWorldTransform(bone, true)));
                     GL.End();
                 }
                 
-                GL.LineWidth(2f);
+                GL.LineWidth(1.5f);
                 GL.Begin(PrimitiveType.Lines);
 
                 foreach (GenericBone bone in Skeleton.Bones)
@@ -229,9 +233,9 @@ namespace Metanoia.Rendering
                     if (bone.ParentIndex > -1)
                     {
                         GL.Color3(0f, 0f, 1f);
-                        GL.Vertex3(Vector3.TransformPosition(Vector3.Zero, Skeleton.GetBoneTransform(bone)));
+                        GL.Vertex3(Vector3.TransformPosition(Vector3.Zero, Skeleton.GetWorldTransform(bone, true)));
                         GL.Color3(0f, 1f, 0.5f);
-                        GL.Vertex3(Vector3.TransformPosition(Vector3.Zero, Skeleton.GetBoneTransform(Skeleton.Bones[bone.ParentIndex])));
+                        GL.Vertex3(Vector3.TransformPosition(Vector3.Zero, Skeleton.GetWorldTransform(Skeleton.Bones[bone.ParentIndex], true)));
                     }
                 }
 

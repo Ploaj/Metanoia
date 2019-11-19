@@ -88,7 +88,6 @@ namespace Metanoia
                     {
                         Node.Open(File);
                         ModelViewer.SetModel(ModelFormat.ToGenericModel());
-                        ModelViewer.RefreshRender();
                     }
                 }
             }

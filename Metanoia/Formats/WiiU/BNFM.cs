@@ -202,8 +202,8 @@ namespace Metanoia.Formats.WiiU
                         }
                         if (vert.Weights[0] == 1 && boneIDCount == 1)
                         {
-                            vert.Pos = Vector3.TransformPosition(vert.Pos, Skeleton.GetBoneTransform(Skeleton.Bones[(int)vert.Bones[0]]));
-                            vert.Nrm = Vector3.TransformNormal(vert.Nrm, Skeleton.GetBoneTransform(Skeleton.Bones[(int)vert.Bones[0]]));
+                            vert.Pos = Vector3.TransformPosition(vert.Pos, Skeleton.GetWorldTransform(Skeleton.Bones[(int)vert.Bones[0]]));
+                            vert.Nrm = Vector3.TransformNormal(vert.Nrm, Skeleton.GetWorldTransform(Skeleton.Bones[(int)vert.Bones[0]]));
                         }
                         vert.Nrm.Normalize();
                         mesh.Vertices.Add(vert);

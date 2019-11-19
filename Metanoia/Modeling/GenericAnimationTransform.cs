@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace Metanoia.Modeling
 {
+    public enum AnimNodeHashType
+    {
+        Name = 0,
+        CRC32C = 1,
+    }
+
     /// <summary>
     /// Stores animation data for transformations
     /// Information is stored in tracks <see cref="GenericTransformTrack"/>
@@ -10,6 +16,10 @@ namespace Metanoia.Modeling
     public class GenericAnimationTransform
     {
         public string Name { get; set; }
+
+        public uint Hash { get; set; }
+
+        public AnimNodeHashType HashType = AnimNodeHashType.Name;
 
         public List<GenericTransformTrack> Tracks = new List<GenericTransformTrack>();
 

@@ -52,23 +52,48 @@ namespace Metanoia.Modeling
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="BoneIndex"></param>
+        /// <returns></returns>
         public Matrix4 GetWorldTransform(int BoneIndex)
         {
             if (BoneIndex > Bones.Count || BoneIndex < 0) return Matrix4.Identity;
 
             GenericBone b = Bones[BoneIndex];
 
-            return GetBoneTransform(b);
+            return GetWorldTransform(b);
         }
 
-        public Matrix4 GetBoneTransform(GenericBone Bone)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public Matrix4[] GetBindTransforms()
+        {
+            Matrix4[] inv = new Matrix4[Bones.Count];
+
+            for (int i = 0; i < Bones.Count; i++)
+                inv[i] = GetWorldTransform(Bones[i], false).Inverted() * GetWorldTransform(Bones[i], true);
+
+            return inv;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Bone"></param>
+        /// <param name="animated"></param>
+        /// <returns></returns>
+        public Matrix4 GetWorldTransform(GenericBone Bone, bool animated = false)
         {
             if (Bone == null)
                 return Matrix4.Identity;
             if (Bone.ParentIndex == -1)
-                return Bone.GetTransform();
+                return Bone.GetTransform(animated);
             else
-                return Bone.GetTransform() * GetBoneTransform(Bones[Bone.ParentIndex]);
+                return Bone.GetTransform(animated) * GetWorldTransform(Bones[Bone.ParentIndex], animated);
         }
 
         public int IndexOf(GenericBone Bone)
@@ -100,17 +125,8 @@ namespace Metanoia.Modeling
         {
             if(b.ParentIndex != -1)
             {
-                //Console.WriteLine(b.Name + " " + parent.Name);
-                //Matrix4 worldT = b.Transform;
                 Matrix4 parentT = GetWorldTransform(b.ParentIndex).Inverted();
                 b.Transform = parentT * b.Transform;
-                //if (!worldT.Equals(GetBoneTransform(b)))
-                {
-                    //Console.WriteLine("\t" + worldT.ToString());
-                    //Console.WriteLine("\t" + GetBoneTransform(b).ToString());
-                    //Console.WriteLine("\t" + GetBoneTransform(parent).ToString());
-                    //Console.WriteLine("\t" + parentT.ToString());
-                }
             }
 
             foreach (var child in GetChildren(b))
@@ -136,10 +152,19 @@ namespace Metanoia.Modeling
         public string Name { get; set; }
         public int ID;
         public int ParentIndex = -1;
+
+        public uint NameHash
+        {
+            get
+            {
+                return Tools.CRC32.Crc32C(Name);
+            }
+        }
         
         public bool Selected = false;
 
-        public Matrix4 AnimatedTransform = Matrix4.Identity;
+        [ReadOnly(true), Category("Animated")]
+        public Matrix4 AnimatedTransform { get; set; } = Matrix4.Identity;
 
         [ReadOnly(true), Category("Transforms")]
         public Vector3 Position { get; set; }
@@ -165,8 +190,10 @@ namespace Metanoia.Modeling
             }
         }
 
-        public Matrix4 GetTransform()
+        public Matrix4 GetTransform(bool animated)
         {
+            if (animated && AnimatedTransform != Matrix4.Identity)
+                return AnimatedTransform;
             return Matrix4.CreateScale(Scale) * Matrix4.CreateFromQuaternion(QuaternionRotation) * Matrix4.CreateTranslation(Position);
         }
 
@@ -174,13 +201,13 @@ namespace Metanoia.Modeling
         {
             get
             {
-                return GetTransform();
+                return GetTransform(false);
             }
             set
             {
                 Position = value.ExtractTranslation();
                 Scale = value.ExtractScale();
-                Rotation = ToEulerAngles(value);
+                Rotation = ToEulerAngles(value.Inverted());
             }
         }
 
@@ -192,7 +219,7 @@ namespace Metanoia.Modeling
             return v;
         }
 
-        private static Vector3 ToEulerAngles(Quaternion q)
+        public static Vector3 ToEulerAngles(Quaternion q)
         {
             Matrix4 mat = Matrix4.CreateFromQuaternion(q);
             float x, y, z;
@@ -212,7 +239,7 @@ namespace Metanoia.Modeling
             return new Vector3(x, y, z);
         }
 
-        private static Vector3 ToEulerAngles(Matrix4 mat)
+        public static Vector3 ToEulerAngles(Matrix4 mat)
         {
             float x, y, z;
 

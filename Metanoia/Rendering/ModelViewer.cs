@@ -170,7 +170,41 @@ namespace Metanoia.Rendering
             renderMode.ComboBox.SelectedIndex = 0;
 
             animationTS.Visible = false;
+
+            System.Timers.Timer timer = new System.Timers.Timer();
+
+            timer.Interval = 1000 / 60d;
+
+            timer.Elapsed += (sender, args) =>
+            {
+                if (Viewport.IsDisposed)
+                {
+                    timer.Stop();
+                    timer.Dispose();
+                }
+                Viewport.Invalidate();
+            };
+
+            timer.Start();
         }
+
+        private bool IsPlaying
+        {
+            get
+            {
+                return _isPlaying;
+            }
+            set
+            {
+                _isPlaying = value;
+                if (_isPlaying)
+                    buttonPlay.Image = Properties.Resources.icon_pause;
+                else
+                    buttonPlay.Image = Properties.Resources.icon_play;
+            }
+        }
+        private bool _isPlaying = false;
+        
 
         private void UpdateCamera()
         {
@@ -251,24 +285,32 @@ namespace Metanoia.Rendering
         public void AddAnimation(GenericAnimation animation)
         {
             animationCB.Items.Add(animation);
+            animationCB.SelectedItem = animation;
             EnableAnimation();
-        }
-
-        public void RefreshRender()
-        {
-            Viewport.Invalidate();
+            if (Model.Skeleton != null)
+                animation.UpdateSkeleton(Frame, Model.Skeleton);
+            ResetView();
         }
 
         private void Viewport_Paint(object sender, PaintEventArgs e)
+        {
+            RenderScene();
+        }
+
+        private void RenderScene()
         {
             if (GenericRenderer == null)
             {
                 return;
             }
+
             if (!GenericRenderer.HasModelSet)
             {
                 GenericRenderer.SetGenericModel(Model);
             }
+
+            if (IsPlaying)
+                buttonNext_Click(null, null);
 
             Viewport.MakeCurrent();
 
@@ -380,10 +422,15 @@ namespace Metanoia.Rendering
 
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
+            ResetView();
+            Viewport.Invalidate();
+        }
+
+        public void ResetView()
+        {
             _translation = _defaultTranslation;
             _rotation = _defaultRotation;
             UpdateCamera();
-            Viewport.Invalidate();
         }
 
         private void toolStripButton2_Click(object sender, EventArgs e)
@@ -406,7 +453,6 @@ namespace Metanoia.Rendering
                 showBoneButton.Image = Properties.Resources.icon_bone_on;
                 ShowBones = true;
             }
-            RefreshRender();
         }
         
         private void Viewport_KeyDown(object sender, System.Windows.Forms.KeyPressEventArgs e)
@@ -416,7 +462,6 @@ namespace Metanoia.Rendering
                 Z += speed;
             if (e.KeyChar == 's')
                 Z -= speed;
-            RefreshRender();
         }
 
         private void toolStripButton3_Click(object sender, EventArgs e)
@@ -480,6 +525,68 @@ namespace Metanoia.Rendering
             }
         }
 
+        private void buttonNext_Click(object sender, EventArgs e)
+        {
+            Frame++;
+            if (Frame >= MaxFrame)
+                Frame = 0;
+            if (Model.Skeleton != null && animationCB.SelectedItem is GenericAnimation anim)
+                anim.UpdateSkeleton(Frame, Model.Skeleton);
+        }
+
+        private void buttonPlay_Click(object sender, EventArgs e)
+        {
+            IsPlaying = !IsPlaying;
+        }
+
+        private void buttonPrevious_Click(object sender, EventArgs e)
+        {
+            Frame--;
+            if (Frame < 0)
+                Frame = MaxFrame - 1;
+            if (Model.Skeleton != null && animationCB.SelectedItem is GenericAnimation anim)
+                anim.UpdateSkeleton(Frame, Model.Skeleton);
+        }
+
+        private void buttonBegin_Click(object sender, EventArgs e)
+        {
+            Frame = 0;
+            if (Model.Skeleton != null && animationCB.SelectedItem is GenericAnimation anim)
+                anim.UpdateSkeleton(Frame, Model.Skeleton);
+        }
+
+        private void buttonEnd_Click(object sender, EventArgs e)
+        {
+            Frame = MaxFrame;
+            if (Model.Skeleton != null && animationCB.SelectedItem is GenericAnimation anim)
+                anim.UpdateSkeleton(Frame, Model.Skeleton);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void exportModelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExportModel();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void exportAnimationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(animationCB.SelectedItem is GenericAnimation anim)
+            {
+                IsPlaying = false;
+                Frame = 0;
+                FormatManager.Instance.ExportAnimation(Model.Skeleton, anim);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -503,9 +610,7 @@ namespace Metanoia.Rendering
             }
             PrevX = e.X;
             PrevY = e.Y;
-            Viewport.Invalidate();
         }
-
         // FrameViewport
         // MakeRender
         

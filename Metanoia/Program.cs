@@ -17,7 +17,8 @@ namespace Metanoia
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
-            Application.Run(new ExploreForm());
+            ExploreForm.Instance = new ExploreForm();
+            Application.Run(ExploreForm.Instance);
         }
     }
 }

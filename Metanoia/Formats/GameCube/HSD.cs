@@ -181,7 +181,7 @@ namespace Metanoia.Formats.GameCube
         {
             var finalList = new List<GenericVertex>(InVerts.Length);
 
-            var transform = skeleton.GetBoneTransform(skeleton.Bones[jobjToIndex[parent]]);
+            var transform = skeleton.GetWorldTransform(skeleton.Bones[jobjToIndex[parent]]);
 
             foreach (var inVert in InVerts)
             {
@@ -201,8 +201,8 @@ namespace Metanoia.Formats.GameCube
                     // single bind fix
                     if (weightList != null && weightList.JOBJs.Count == 1)
                     {
-                        vertex.Pos = Vector3.TransformPosition(vertex.Pos, skeleton.GetBoneTransform(skeleton.Bones[jobjToIndex[weightList.JOBJs[0]]]));
-                        vertex.Nrm = Vector3.TransformNormal(vertex.Nrm, skeleton.GetBoneTransform(skeleton.Bones[jobjToIndex[weightList.JOBJs[0]]]));
+                        vertex.Pos = Vector3.TransformPosition(vertex.Pos, skeleton.GetWorldTransform(skeleton.Bones[jobjToIndex[weightList.JOBJs[0]]]));
+                        vertex.Nrm = Vector3.TransformNormal(vertex.Nrm, skeleton.GetWorldTransform(skeleton.Bones[jobjToIndex[weightList.JOBJs[0]]]));
                     }
 
                     //Bone Weights

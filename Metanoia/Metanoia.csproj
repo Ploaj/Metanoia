@@ -77,6 +77,7 @@
     <Compile Include="Exporting\ExportAttribute.cs" />
     <Compile Include="Exporting\ExportDAE.cs" />
     <Compile Include="Exporting\ExportMat.cs" />
+    <Compile Include="Exporting\IAnimationExporter.cs" />
     <Compile Include="Exporting\IModelExporter.cs" />
     <Compile Include="Exporting\ExportOBJ.cs" />
     <Compile Include="Exporting\ExportSMD.cs" />
@@ -244,6 +245,10 @@
     <Content Include="lib\HSDLib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\icon_play.png" />
+    <None Include="Resources\icon_pause.png" />
+    <None Include="Resources\icon_end.png" />
+    <None Include="Resources\icon_begin.png" />
     <None Include="Resources\icon_export.png" />
   </ItemGroup>
   <ItemGroup />

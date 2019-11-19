@@ -73,6 +73,16 @@ namespace Metanoia.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_begin {
+            get {
+                object obj = ResourceManager.GetObject("icon_begin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_bone_off {
             get {
                 object obj = ResourceManager.GetObject("icon_bone_off", resourceCulture);
@@ -93,9 +103,39 @@ namespace Metanoia.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_end {
+            get {
+                object obj = ResourceManager.GetObject("icon_end", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_export {
             get {
                 object obj = ResourceManager.GetObject("icon_export", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_pause {
+            get {
+                object obj = ResourceManager.GetObject("icon_pause", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_play {
+            get {
+                object obj = ResourceManager.GetObject("icon_play", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

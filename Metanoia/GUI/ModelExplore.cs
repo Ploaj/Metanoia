@@ -21,6 +21,8 @@ namespace Metanoia.GUI
 
             Model = model;
             ModelViewer.SetModel(model.ToGenericModel());
+
+            FormClosed += (sender, args) => { ModelViewer.Dispose(); GC.Collect(); };
         }
 
         ~ModelExplore()

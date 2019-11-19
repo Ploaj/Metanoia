@@ -16,6 +16,8 @@ namespace Metanoia
         
         private List<IModelExporter> ModelExporters = new List<IModelExporter>();
 
+        private List<IAnimationExporter> AnimationExporters = new List<IAnimationExporter>();
+
         private List<string> AnimationExtensions = new List<string>();
 
         private List<Type> AllTypes = new List<Type>();
@@ -31,6 +33,17 @@ namespace Metanoia
             {
                 if(t != typeof(IModelExporter))
                     ModelExporters.Add((IModelExporter)Activator.CreateInstance(t));
+            }
+
+            var animationExportTypes = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
+                                    from assemblyType in domainAssembly.GetTypes()
+                                    where typeof(IAnimationExporter).IsAssignableFrom(assemblyType)
+                                    select assemblyType).ToArray();
+
+            foreach (var t in animationExportTypes)
+            {
+                if (t != typeof(IAnimationExporter))
+                    AnimationExporters.Add((IAnimationExporter)Activator.CreateInstance(t));
             }
 
             var Types = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
@@ -57,6 +70,10 @@ namespace Metanoia
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public string GetModelExportFilter()
         {
             StringBuilder filter = new StringBuilder();
@@ -68,6 +85,51 @@ namespace Metanoia
             return filter.ToString();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string GetAnimationExportFilter()
+        {
+            StringBuilder filter = new StringBuilder();
+
+            foreach (var v in AnimationExporters)
+                filter.Append($"{v.Name()} (*{v.Extension()})|*{v.Extension()}|");
+            filter.Append("All files (*.*)|*.*");
+
+            return filter.ToString();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="skeleton"></param>
+        /// <param name="animation"></param>
+        /// <returns></returns>
+        public bool ExportAnimation(GenericSkeleton skeleton, GenericAnimation animation)
+        {
+            var path = FileTools.GetSaveFile(animation.Name, GetAnimationExportFilter());
+            if (path != null && skeleton != null)
+            {
+                var ext = System.IO.Path.GetExtension(path).ToLower();
+                foreach (var v in AnimationExporters)
+                {
+                    if (v.Extension().Equals(ext))
+                    {
+                        v.Export(path, skeleton, animation);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="m"></param>
+        /// <returns></returns>
         public bool ExportModel(string filePath, GenericModel m)
         {
             var ext = System.IO.Path.GetExtension(filePath).ToLower();

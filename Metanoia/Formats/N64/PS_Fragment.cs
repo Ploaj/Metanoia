@@ -312,7 +312,7 @@ namespace Metanoia.Formats.N64
 
                             reader.Seek((uint)doff);
                             {
-                                GenericMesh mesh = DisplayListToGenericMesh(N64Tools.ReadDisplayList(reader, Model.Skeleton.IndexOf(Model.Skeleton.GetBoneByID(w)), Model.Skeleton.GetBoneTransform(Model.Skeleton.GetBoneByID(w))));
+                                GenericMesh mesh = DisplayListToGenericMesh(N64Tools.ReadDisplayList(reader, Model.Skeleton.IndexOf(Model.Skeleton.GetBoneByID(w)), Model.Skeleton.GetWorldTransform(Model.Skeleton.GetBoneByID(w))));
                                 mesh.MaterialName = currentMaterialName;
                                 Model.Meshes.Add(mesh);
                             }
@@ -329,7 +329,7 @@ namespace Metanoia.Formats.N64
 
                             reader.Seek((uint)doff);
                             {
-                                GenericMesh mesh = DisplayListToGenericMesh(N64Tools.ReadDisplayList(reader, Model.Skeleton.IndexOf(parentBone), Model.Skeleton.GetBoneTransform(parentBone)));
+                                GenericMesh mesh = DisplayListToGenericMesh(N64Tools.ReadDisplayList(reader, Model.Skeleton.IndexOf(parentBone), Model.Skeleton.GetWorldTransform(parentBone)));
                                 mesh.MaterialName = currentMaterialName;
                                 Model.Meshes.Add(mesh);
                             }

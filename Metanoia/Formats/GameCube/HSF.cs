@@ -614,7 +614,7 @@ namespace Metanoia.Formats.GameCube
             if (bone != null)
             {
                 boneIndices = new Vector4(skeleton.Bones.IndexOf(bone), 0, 0, 0);
-                Position = Vector3.TransformPosition(Position, skeleton.GetBoneTransform(bone));
+                Position = Vector3.TransformPosition(Position, skeleton.GetWorldTransform(bone));
             }
             
             

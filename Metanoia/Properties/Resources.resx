@@ -133,4 +133,16 @@
   <data name="icon_export" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\icon_export.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="icon_begin" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\icon_begin.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_end" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\icon_end.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_pause" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\icon_pause.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="icon_play" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\icon_play.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

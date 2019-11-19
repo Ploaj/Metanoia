@@ -1,7 +1,5 @@
 ﻿using Metanoia.Formats;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 
@@ -28,10 +26,15 @@ namespace Metanoia.GUI
         {
             InitializeComponent();
             File = container;
+
+            buttonModel.Enabled = (container is I3DModelFormat) ;
+
             
             FolderNode folder = new FolderNode();
             folder.Text = container.GetType().Name;
             fileTree.Nodes.Add(folder);
+
+            fileTree.NodeMouseClick += (sender, args) => fileTree.SelectedNode = args.Node;
 
             foreach (var file in File.GetFiles())
             {
@@ -49,6 +52,28 @@ namespace Metanoia.GUI
                     }
                 };
                 FileContextMenu.MenuItems.Add(item);
+            }
+
+
+            {
+                MenuItem item = new MenuItem("Export All");
+                item.Click += (sender, args) =>
+                {
+                    if (fileTree.SelectedNode is FolderNode folderNode)
+                    {
+                        var path = FileTools.GetFolder();
+                        if(path != null)
+                        {
+                            foreach(TreeNode v in folderNode.Nodes)
+                            {
+                                if (v.Tag is FileItem fitem)
+                                    System.IO.File.WriteAllBytes(path + "\\" + fitem.FileName, fitem.GetFileBinary());
+
+                            }
+                        }
+                    }
+                };
+                FolderContextMenu.MenuItems.Add(item);
             }
         }
         
@@ -110,6 +135,22 @@ namespace Metanoia.GUI
                 }
             }
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void buttonModel_Click(object sender, EventArgs e)
+        {
+            if (File is I3DModelFormat model)
+            {
+                ModelExplore explore = new ModelExplore(model);
+                explore.Text = Text;
+                ExploreForm.Instance.AddDockedControl(explore);
+            }
+            Close();
         }
     }
 }

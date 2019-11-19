@@ -31,8 +31,10 @@ namespace Metanoia.Rendering
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ModelViewer));
-            this.Viewport = new OpenTK.GLControl();
+            this.Viewport = new OpenTK.GLControl(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 24, 8, 16));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
+            this.importAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
@@ -47,14 +49,14 @@ namespace Metanoia.Rendering
             this.animationTS = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.animationCB = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton5 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton6 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton7 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton8 = new System.Windows.Forms.ToolStripButton();
+            this.buttonBegin = new System.Windows.Forms.ToolStripButton();
+            this.buttonPrevious = new System.Windows.Forms.ToolStripButton();
+            this.buttonPlay = new System.Windows.Forms.ToolStripButton();
+            this.buttonNext = new System.Windows.Forms.ToolStripButton();
+            this.buttonEnd = new System.Windows.Forms.ToolStripButton();
             this.frameLabel = new System.Windows.Forms.ToolStripLabel();
-            this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
-            this.importAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1.SuspendLayout();
             this.animationTS.SuspendLayout();
             this.SuspendLayout();
@@ -94,6 +96,26 @@ namespace Metanoia.Rendering
             this.toolStrip1.Size = new System.Drawing.Size(602, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripDropDownButton1
+            // 
+            this.toolStripDropDownButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exportModelToolStripMenuItem,
+            this.importAnimationToolStripMenuItem,
+            this.exportAnimationToolStripMenuItem});
+            this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
+            this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(38, 22);
+            this.toolStripDropDownButton1.Text = "File";
+            // 
+            // importAnimationToolStripMenuItem
+            // 
+            this.importAnimationToolStripMenuItem.Name = "importAnimationToolStripMenuItem";
+            this.importAnimationToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.importAnimationToolStripMenuItem.Text = "Import Animation";
+            this.importAnimationToolStripMenuItem.Click += new System.EventHandler(this.importAnimationToolStripMenuItem_Click);
             // 
             // exportButton
             // 
@@ -185,11 +207,11 @@ namespace Metanoia.Rendering
             this.animationTS.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripLabel2,
             this.animationCB,
-            this.toolStripButton4,
-            this.toolStripButton5,
-            this.toolStripButton6,
-            this.toolStripButton7,
-            this.toolStripButton8,
+            this.buttonBegin,
+            this.buttonPrevious,
+            this.buttonPlay,
+            this.buttonNext,
+            this.buttonEnd,
             this.frameLabel});
             this.animationTS.Location = new System.Drawing.Point(0, 25);
             this.animationTS.Name = "animationTS";
@@ -210,50 +232,55 @@ namespace Metanoia.Rendering
             this.animationCB.Size = new System.Drawing.Size(121, 25);
             this.animationCB.SelectedIndexChanged += new System.EventHandler(this.animationCB_SelectedIndexChanged);
             // 
-            // toolStripButton4
+            // buttonBegin
             // 
-            this.toolStripButton4.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton4.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton4.Image")));
-            this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton4.Name = "toolStripButton4";
-            this.toolStripButton4.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton4.Text = "toolStripButton4";
+            this.buttonBegin.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.buttonBegin.Image = global::Metanoia.Properties.Resources.icon_begin;
+            this.buttonBegin.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.buttonBegin.Name = "buttonBegin";
+            this.buttonBegin.Size = new System.Drawing.Size(23, 22);
+            this.buttonBegin.Text = "Start";
+            this.buttonBegin.Click += new System.EventHandler(this.buttonBegin_Click);
             // 
-            // toolStripButton5
+            // buttonPrevious
             // 
-            this.toolStripButton5.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton5.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton5.Image")));
-            this.toolStripButton5.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton5.Name = "toolStripButton5";
-            this.toolStripButton5.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton5.Text = "toolStripButton5";
+            this.buttonPrevious.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.buttonPrevious.Image = global::Metanoia.Properties.Resources.icon_begin;
+            this.buttonPrevious.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.buttonPrevious.Name = "buttonPrevious";
+            this.buttonPrevious.Size = new System.Drawing.Size(23, 22);
+            this.buttonPrevious.Text = "Previous";
+            this.buttonPrevious.Click += new System.EventHandler(this.buttonPrevious_Click);
             // 
-            // toolStripButton6
+            // buttonPlay
             // 
-            this.toolStripButton6.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton6.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton6.Image")));
-            this.toolStripButton6.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton6.Name = "toolStripButton6";
-            this.toolStripButton6.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton6.Text = "toolStripButton6";
+            this.buttonPlay.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.buttonPlay.Image = global::Metanoia.Properties.Resources.icon_play;
+            this.buttonPlay.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.buttonPlay.Name = "buttonPlay";
+            this.buttonPlay.Size = new System.Drawing.Size(23, 22);
+            this.buttonPlay.Text = "Play/Pause";
+            this.buttonPlay.Click += new System.EventHandler(this.buttonPlay_Click);
             // 
-            // toolStripButton7
+            // buttonNext
             // 
-            this.toolStripButton7.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton7.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton7.Image")));
-            this.toolStripButton7.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton7.Name = "toolStripButton7";
-            this.toolStripButton7.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton7.Text = "toolStripButton7";
+            this.buttonNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.buttonNext.Image = global::Metanoia.Properties.Resources.icon_end;
+            this.buttonNext.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.buttonNext.Name = "buttonNext";
+            this.buttonNext.Size = new System.Drawing.Size(23, 22);
+            this.buttonNext.Text = "Next";
+            this.buttonNext.Click += new System.EventHandler(this.buttonNext_Click);
             // 
-            // toolStripButton8
+            // buttonEnd
             // 
-            this.toolStripButton8.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton8.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton8.Image")));
-            this.toolStripButton8.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton8.Name = "toolStripButton8";
-            this.toolStripButton8.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton8.Text = "toolStripButton8";
+            this.buttonEnd.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.buttonEnd.Image = global::Metanoia.Properties.Resources.icon_end;
+            this.buttonEnd.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.buttonEnd.Name = "buttonEnd";
+            this.buttonEnd.Size = new System.Drawing.Size(23, 22);
+            this.buttonEnd.Text = "End";
+            this.buttonEnd.Click += new System.EventHandler(this.buttonEnd_Click);
             // 
             // frameLabel
             // 
@@ -261,23 +288,19 @@ namespace Metanoia.Rendering
             this.frameLabel.Size = new System.Drawing.Size(69, 22);
             this.frameLabel.Text = "Frame: 0 / 0";
             // 
-            // toolStripDropDownButton1
+            // exportAnimationToolStripMenuItem
             // 
-            this.toolStripDropDownButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.importAnimationToolStripMenuItem});
-            this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
-            this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(38, 22);
-            this.toolStripDropDownButton1.Text = "File";
+            this.exportAnimationToolStripMenuItem.Name = "exportAnimationToolStripMenuItem";
+            this.exportAnimationToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.exportAnimationToolStripMenuItem.Text = "Export Animation";
+            this.exportAnimationToolStripMenuItem.Click += new System.EventHandler(this.exportAnimationToolStripMenuItem_Click);
             // 
-            // importAnimationToolStripMenuItem
+            // exportModelToolStripMenuItem
             // 
-            this.importAnimationToolStripMenuItem.Name = "importAnimationToolStripMenuItem";
-            this.importAnimationToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.importAnimationToolStripMenuItem.Text = "Import Animation";
-            this.importAnimationToolStripMenuItem.Click += new System.EventHandler(this.importAnimationToolStripMenuItem_Click);
+            this.exportModelToolStripMenuItem.Name = "exportModelToolStripMenuItem";
+            this.exportModelToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.exportModelToolStripMenuItem.Text = "Export Model";
+            this.exportModelToolStripMenuItem.Click += new System.EventHandler(this.exportModelToolStripMenuItem_Click);
             // 
             // ModelViewer
             // 
@@ -315,13 +338,15 @@ namespace Metanoia.Rendering
         private System.Windows.Forms.ToolStrip animationTS;
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
         private System.Windows.Forms.ToolStripComboBox animationCB;
-        private System.Windows.Forms.ToolStripButton toolStripButton4;
-        private System.Windows.Forms.ToolStripButton toolStripButton5;
-        private System.Windows.Forms.ToolStripButton toolStripButton6;
-        private System.Windows.Forms.ToolStripButton toolStripButton7;
-        private System.Windows.Forms.ToolStripButton toolStripButton8;
+        private System.Windows.Forms.ToolStripButton buttonBegin;
+        private System.Windows.Forms.ToolStripButton buttonPrevious;
+        private System.Windows.Forms.ToolStripButton buttonPlay;
+        private System.Windows.Forms.ToolStripButton buttonNext;
+        private System.Windows.Forms.ToolStripButton buttonEnd;
         private System.Windows.Forms.ToolStripLabel frameLabel;
         private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
         private System.Windows.Forms.ToolStripMenuItem importAnimationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportModelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportAnimationToolStripMenuItem;
     }
 }

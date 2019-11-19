@@ -9,6 +9,8 @@ namespace Metanoia
 {
     public partial class ExploreForm : DockContent
     {
+        public static ExploreForm Instance;
+
         public ExploreForm()
         {
             InitializeComponent();

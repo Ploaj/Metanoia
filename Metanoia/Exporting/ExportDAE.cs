@@ -85,7 +85,7 @@ namespace Metanoia.Exporting
                     bone.Transform.M12, bone.Transform.M22, bone.Transform.M32, bone.Transform.M42,
                     bone.Transform.M13, bone.Transform.M23, bone.Transform.M33, bone.Transform.M43,
                     bone.Transform.M14, bone.Transform.M24, bone.Transform.M34, bone.Transform.M44 };
-                        Matrix4 InvWorldTransform = Model.Skeleton.GetBoneTransform(bone).Inverted();
+                        Matrix4 InvWorldTransform = Model.Skeleton.GetWorldTransform(bone).Inverted();
                         float[] InvTransform = new float[] { InvWorldTransform.M11, InvWorldTransform.M21, InvWorldTransform.M31, InvWorldTransform.M41,
                     InvWorldTransform.M12, InvWorldTransform.M22, InvWorldTransform.M32, InvWorldTransform.M42,
                     InvWorldTransform.M13, InvWorldTransform.M23, InvWorldTransform.M33, InvWorldTransform.M43,

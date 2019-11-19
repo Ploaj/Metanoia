@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Metanoia.Exporting
 {
-    public class ExportSMD : IModelExporter
+    public class ExportSMD : IModelExporter, IAnimationExporter
     {
         public static void Save(string FilePath, GenericModel Model)
         {
@@ -236,6 +236,44 @@ namespace Metanoia.Exporting
                 }
 
                 w.WriteLine("end");
+            }
+        }
+
+        /// <summary>
+        /// Export Animation
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="skeleton"></param>
+        /// <param name="animation"></param>
+        public void Export(string filePath, GenericSkeleton skeleton, GenericAnimation animation)
+        {
+            using (StreamWriter w = new StreamWriter(new FileStream(filePath, FileMode.Create)))
+            {
+                w.WriteLine("version 1");
+
+                if (skeleton != null)
+                {
+                    w.WriteLine("nodes");
+                    foreach (GenericBone bone in skeleton.Bones)
+                    {
+                        w.WriteLine($" {skeleton.IndexOf(bone)} \"{bone.Name}\" {bone.ParentIndex}");
+                    }
+                    w.WriteLine("end");
+                    w.WriteLine("skeleton");
+
+                    for(int i = 0; i < animation.FrameCount; i++)
+                    {
+                        animation.UpdateSkeleton(i, skeleton);
+                        w.WriteLine("time " + i);
+                        foreach (GenericBone bone in skeleton.Bones)
+                        {
+                            GenericBone b = new GenericBone();
+                            b.Transform = bone.GetTransform(true);
+                            w.WriteLine($" {skeleton.IndexOf(bone)} {b.Position.X} {b.Position.Y} {b.Position.Z} {b.Rotation.X} {b.Rotation.Y} {b.Rotation.Z}");
+                        }
+                    }
+                    w.WriteLine("end");
+                }
             }
         }
     }
