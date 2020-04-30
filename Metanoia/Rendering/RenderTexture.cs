@@ -47,7 +47,7 @@ namespace Metanoia.Rendering
             
             Bitmap b = new Bitmap((int)Width, (int)Height);
             BitmapData data = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
+            
             Marshal.Copy(pixels, 0, data.Scan0, pixels.Length);
             
             b.UnlockBits(data);

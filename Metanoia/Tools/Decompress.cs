@@ -787,5 +787,59 @@ namespace Metanoia.Tools
             return dbuf;
         }
 
+
+
+        public static byte[] SRD_Decomp(byte[] data)
+        {
+            List<byte> o = new List<byte>();
+
+            using (DataReader r = new DataReader(data))
+            {
+                r.BigEndian = true;
+
+                if (r.ReadString(4) != "$CMP")
+                    throw new InvalidDataException();
+
+                r.Seek(0x10);
+                var decompSize = r.ReadInt32();
+                var compSize = r.ReadInt32();
+                r.Skip(0x10);
+
+                while (true)
+                {
+                    var cmp_mode = r.ReadString(4);
+                    if (!cmp_mode.StartsWith("$CL") && !cmp_mode.Equals("$CR0"))
+                        break;
+
+                    var chunk_dec_size = r.ReadInt32();
+                    var chunk_cmp_size = r.ReadInt32();
+                    r.ReadInt32();
+
+                    var chunk = r.ReadBytes(chunk_cmp_size - 0x10);
+
+                    if (!cmp_mode.Equals("$CR0"))
+                        chunk = SRC_DEC_CHUNK(chunk, cmp_mode);
+
+                    o.AddRange(chunk);
+                }
+            }
+
+            return o.ToArray();
+        }
+
+        public static byte[] SRC_DEC_CHUNK(byte[] chunk, string cmp_mode)
+        {
+            List<byte> o = new List<byte>();
+
+            using (DataReader r = new DataReader(chunk))
+            {
+                r.BigEndian = true;
+
+
+            }
+
+            return o.ToArray();
+        }
+
     }
 }

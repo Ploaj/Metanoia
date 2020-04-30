@@ -43,12 +43,22 @@ namespace Metanoia
 
         public override Int32 ReadInt32()
         {
-                return BitConverter.ToInt32(Reverse(base.ReadBytes(4)), 0);
+            return BitConverter.ToInt32(Reverse(base.ReadBytes(4)), 0);
         }
 
         public override UInt32 ReadUInt32()
         {
-                return BitConverter.ToUInt32(Reverse(base.ReadBytes(4)), 0);
+            return BitConverter.ToUInt32(Reverse(base.ReadBytes(4)), 0);
+        }
+
+        public override Int64 ReadInt64()
+        {
+            return BitConverter.ToInt64(Reverse(base.ReadBytes(8)), 0);
+        }
+
+        public override UInt64 ReadUInt64()
+        {
+            return BitConverter.ToUInt64(Reverse(base.ReadBytes(8)), 0);
         }
 
         public override float ReadSingle()

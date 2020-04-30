@@ -90,6 +90,7 @@
     <Compile Include="Formats\3DS\Level5\Level5_XI.cs" />
     <Compile Include="Formats\ContainerFormat.cs" />
     <Compile Include="Formats\FormatAttribute.cs" />
+    <Compile Include="Formats\GameCube\aaaaZZZZ.cs" />
     <Compile Include="Formats\GameCube\GLGStriker.cs" />
     <Compile Include="Formats\GameCube\GXTranslator.cs" />
     <Compile Include="Formats\GameCube\HSD.cs" />
@@ -100,11 +101,15 @@
     <Compile Include="Formats\IFileFormat.cs" />
     <Compile Include="Formats\Misc\Blitz.cs" />
     <Compile Include="Formats\Misc\BlitzOBE.cs" />
+    <Compile Include="Formats\Misc\F9Res.cs" />
+    <Compile Include="Formats\Misc\G4PKM.cs" />
     <Compile Include="Formats\Misc\Hgof.cs" />
     <Compile Include="Formats\Misc\JStar.cs" />
     <Compile Include="Formats\Misc\KillPac.cs" />
+    <Compile Include="Formats\Misc\NHMDL.cs" />
     <Compile Include="Formats\Misc\PMaster.cs" />
     <Compile Include="Formats\Misc\PTE.cs" />
+    <Compile Include="Formats\Misc\PVOL.cs" />
     <Compile Include="Formats\Misc\Renderware\RenderWareBinaryStreamReader.cs" />
     <Compile Include="Formats\Misc\Renderware\RWSection.cs" />
     <Compile Include="Formats\Misc\Warriors\G1M.cs" />
@@ -113,10 +118,13 @@
     <Compile Include="Formats\Misc\Warriors\NUNV.cs" />
     <Compile Include="Formats\Misc\Warriors\Warrior.cs" />
     <Compile Include="Formats\Misc\XBOXJson.cs" />
+    <Compile Include="Formats\Misc\YO3MDL.cs" />
     <Compile Include="Formats\N64\N64Tools.cs" />
     <Compile Include="Formats\PS2\DFF.cs" />
     <Compile Include="Formats\PS2\FPK.cs" />
     <Compile Include="Formats\PS3\LBP_MOL.cs" />
+    <Compile Include="Formats\PS3\MES.cs" />
+    <Compile Include="Formats\PS4\GravityRush2GFX.cs" />
     <Compile Include="Formats\PSP\IGB.cs" />
     <Compile Include="Formats\Unity\UnityMesh.cs" />
     <Compile Include="Formats\WiiU\BNFM.cs" />
@@ -177,6 +185,7 @@
     <Compile Include="Tools\LibWii\Shared.cs" />
     <Compile Include="Tools\TLP.cs" />
     <Compile Include="Tools\TriangleConverter.cs" />
+    <Compile Include="Tools\VitaSwizzle.cs" />
     <EmbeddedResource Include="ExploreForm.resx">
       <DependentUpon>ExploreForm.cs</DependentUpon>
     </EmbeddedResource>

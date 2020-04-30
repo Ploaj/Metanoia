@@ -498,8 +498,10 @@ namespace Metanoia.Formats.GameCube
                 node.Type = reader.ReadInt32();
 
                 reader.Position += 0x8;
-
+                
                 node.ParentIndex = reader.ReadInt32();
+                if (node.ParentIndex < 0)
+                    node.ParentIndex = -1;
 
                 reader.Position += 0x8;// unknown
 

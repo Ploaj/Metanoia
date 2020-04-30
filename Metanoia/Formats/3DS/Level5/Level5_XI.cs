@@ -35,6 +35,14 @@ namespace Metanoia.Formats._3DS.Level5
                 tex.Height = (uint)xi.Width; 
             }
             else
+            if (xi.SwitchFile && xi.ImageFormat == 0x1F)
+            {
+                tex.Mipmaps.Add(xi.BuildImageDataFromBlock(16)[0]);
+                tex.InternalFormat = OpenTK.Graphics.OpenGL.PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
+                tex.Width = (uint)xi.Height;
+                tex.Height = (uint)xi.Width;
+            }
+            else
             if (xi.SwitchFile && xi.ImageFormat == 0x1)
             {
                 tex.Mipmaps.Add(xi.BuildImageData()[0]);
@@ -112,8 +120,10 @@ namespace Metanoia.Formats._3DS.Level5
                         type = 0xD;
                         break;
                     case 0x1D:
+                    case 0x1F:
                         break;
                     default:
+                        //File.WriteAllBytes("texture.bin", Decompress.Level5Decom(r.GetSection((uint)imageDataOffset, (int)(r.BaseStream.Length - imageDataOffset))));
                         throw new Exception("Unknown Texture Type " + type.ToString("x"));
                         //break;
                 }
@@ -186,11 +196,11 @@ namespace Metanoia.Formats._3DS.Level5
                 int code = Tiles[i];
 
                 // only need the first mip for now really...
-                if ((i - 2) * 32 + 32 > mip1.Length)
+                if ((i - 2) * blockSize * 4 + blockSize * 4 > mip1.Length)
                     break;
 
-                for (int h = 0; h < 32; h++)
-                    mip1[(i - 2) * 32 + h] = ImageData[code * 32 + h];
+                for (int h = 0; h < blockSize * 4; h++)
+                    mip1[(i - 2) * blockSize * 4 + h] = ImageData[code * blockSize * 4 + h];
             }
 
             pixels.Add(mip1);

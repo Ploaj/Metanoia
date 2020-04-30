@@ -255,7 +255,7 @@ namespace Metanoia.Rendering
 
             if(model.Meshes.Count != 0)
             {
-                _translation = new Vector3(0, -center.Y, -maxY * 1.5f);
+                /*_translation = new Vector3(0, -center.Y, -maxY * 1.5f);
                 _rotation = Vector3.Zero;
                 _defaultTranslation = _translation;
                 _defaultRotation = _rotation;
@@ -263,7 +263,7 @@ namespace Metanoia.Rendering
                 _defaultTranslation = new Vector3(0, -center.Y, -radius * 1.5f);
                 _defaultRotation = new Vector3(0.25f, 0.40f, 0);
 
-                UpdateCamera();
+                UpdateCamera();*/
             }
 
             Model = model;

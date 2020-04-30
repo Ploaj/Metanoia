@@ -5,6 +5,8 @@ namespace Metanoia.Formats._3DS.Level5
     {
         public static GenericBone ToBone(byte[] data)
         {
+            if (data.Length == 0)
+                return null;
             GenericBone bone = new GenericBone();
             using (DataReader r = new DataReader(new System.IO.MemoryStream(data)))
             {
