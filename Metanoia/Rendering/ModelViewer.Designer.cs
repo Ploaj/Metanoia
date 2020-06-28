@@ -114,7 +114,7 @@ namespace Metanoia.Rendering
             // 
             this.importAnimationToolStripMenuItem.Name = "importAnimationToolStripMenuItem";
             this.importAnimationToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.importAnimationToolStripMenuItem.Text = "Import Animation";
+            this.importAnimationToolStripMenuItem.Text = "Import Animation(s)";
             this.importAnimationToolStripMenuItem.Click += new System.EventHandler(this.importAnimationToolStripMenuItem_Click);
             // 
             // exportButton
