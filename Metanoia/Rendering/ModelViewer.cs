@@ -499,14 +499,19 @@ namespace Metanoia.Rendering
         {
             using (OpenFileDialog d = new OpenFileDialog())
             {
+                d.Multiselect = true;
                 d.Filter = FormatManager.Instance.GetAnimationExtensionFilter();
-                
+
                 if (d.ShowDialog() == DialogResult.OK)
                 {
-                    if(FormatManager.Instance.Open(new FileItem(d.FileName)) is IAnimationFormat anim)
+                    foreach (String filename in d.FileNames)
                     {
-                        AddAnimation(anim.ToGenericAnimation());
+                        if (FormatManager.Instance.Open(new FileItem(filename)) is IAnimationFormat anim)
+                        {
+                            AddAnimation(anim.ToGenericAnimation());
+                        }
                     }
+
                 }
             }
         }
