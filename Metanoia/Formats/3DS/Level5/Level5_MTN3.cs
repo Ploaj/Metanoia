@@ -44,7 +44,7 @@ namespace Metanoia.Formats._3DS.Level5
                 reader.Seek(0x04);
                 int hashOffset = reader.ReadInt16() - 4;
                 int nameOffset = reader.ReadInt16() - 4;
-                int animOffset = reader.ReadInt16() - hashOffset - 4;
+                int unkOffset = reader.ReadInt16();
                 reader.Skip(0x06);
                 int compDataLength = reader.ReadInt32();
                 reader.Skip(0x04);
@@ -58,7 +58,7 @@ namespace Metanoia.Formats._3DS.Level5
                 var hash = reader.ReadUInt32();
                 anim.Name = reader.ReadString(reader.Position, -1);
 
-                reader.Seek((uint)animOffset);
+                reader.Seek((uint)0x58);
                 Console.WriteLine("hashOffset = " + hashOffset);
                 anim.FrameCount = reader.ReadInt32();
                 short positionTrackOffset = reader.ReadInt16();
