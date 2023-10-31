@@ -8,9 +8,10 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>Metanoia</RootNamespace>
     <AssemblyName>Metanoia</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -83,7 +84,10 @@
     <Compile Include="Exporting\ExportSMD.cs" />
     <Compile Include="FormatManager.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_MBN.cs" />
+    <Compile Include="Formats\3DS\Level5\Level5_MINF.cs" />
+    <Compile Include="Formats\3DS\Level5\Level5_MINF2.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_MTN2.cs" />
+    <Compile Include="Formats\3DS\Level5\Level5_MTN3.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_PRM.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_Res.cs" />
     <Compile Include="Formats\3DS\Level5\Level5_XC.cs" />
@@ -181,6 +185,7 @@
     </Compile>
     <Compile Include="Tools\Decompress.cs" />
     <Compile Include="Tools\FileTools.cs" />
+    <Compile Include="Tools\ImageCleaner.cs" />
     <Compile Include="Tools\ImageTools.cs" />
     <Compile Include="Tools\LibWii\Shared.cs" />
     <Compile Include="Tools\TLP.cs" />

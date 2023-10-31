@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Linq;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Metanoia
@@ -15,6 +17,11 @@ namespace Metanoia
         public long Length { get => BaseStream.Length; }
 
         public DataReader(byte[] data) : base(new MemoryStream(data))
+        {
+
+        }
+
+        public DataReader(byte[] data, Encoding encoding) : base(new MemoryStream(data), encoding)
         {
 
         }
@@ -95,6 +102,19 @@ namespace Metanoia
             while ((ch = ReadByte()) != 0)
                 str = str + (char)ch;
             return str;
+        }
+
+        public string ReadString(Encoding encoding)
+        {
+            List<byte> text = new List<byte>();
+
+            byte ch;
+            while ((ch = ReadByte()) != 0)
+            {
+                text.Add(ch);
+            }
+
+            return encoding.GetString(text.ToArray());
         }
 
         public string ReadString(int Size)

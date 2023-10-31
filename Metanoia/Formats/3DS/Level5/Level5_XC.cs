@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -112,7 +113,6 @@ namespace Metanoia.Formats._3DS.Level5
             
             foreach(var f in Files)
             {
-                //Console.WriteLine(f.Key);
                 if (f.Key.EndsWith("RES.bin"))
                 {
                     resourceFile = new Level5_Resource(f.Value);
@@ -198,7 +198,124 @@ namespace Metanoia.Formats._3DS.Level5
                 }
             }
 
+            // fix textures
+            if (textureList.Count > 0 && textureList.Count % 2 == 0)
+            {
+                for (int i = 0; i < textureList.Count/2+1; i+=2)
+                {
+                    _3DSImageTools.Tex_Formats pixelFormat1 = (_3DSImageTools.Tex_Formats)textureList[i].PixelFormatTrue;
+                    _3DSImageTools.Tex_Formats pixelFormat2 = (_3DSImageTools.Tex_Formats)textureList[i+1].PixelFormatTrue;
+
+                    if (pixelFormat1 == _3DSImageTools.Tex_Formats.ETC1 && pixelFormat2 == _3DSImageTools.Tex_Formats.RGB565)
+                    {
+                        Bitmap etc1 = GenericTexture.GetBitmap((int)textureList[i].Width, (int)textureList[i].Height, textureList[i].Mipmaps[0]);
+                        Bitmap rgb = GenericTexture.GetBitmap((int)textureList[i+1].Width, (int)textureList[i+1].Height, textureList[i+1].Mipmaps[0]);
+
+                        ImageCleaner imageCleaner = new ImageCleaner(rgb, etc1);
+                        imageCleaner.Cleaner();
+
+                        textureList[i + 1].Mipmaps.Clear();
+                        textureList[i + 1].FromBitmap(imageCleaner.Result);
+                    }
+                }
+            }
+
             return model;
+        }
+
+        public GenericAnimation[] ToGenericAnimation()
+        {
+            int motionCount = Files.Count(x => x.Key.EndsWith("mtn2") || x.Key.EndsWith("mtn3"));
+            int subMotionCount = Files.Count(x => x.Key.EndsWith("mtninf") || x.Key.EndsWith("mtninf2"));
+            
+            if (motionCount + subMotionCount > 0)
+            {
+                List<GenericAnimation> animations = new List<GenericAnimation>();
+                Dictionary<uint, GenericAnimation> animDict = new Dictionary<uint, GenericAnimation>();
+                Dictionary<uint, List<Level5_MINF>> subAnimDict = new Dictionary<uint, List<Level5_MINF>>();
+                Dictionary<uint, List<Level5_MINF2.SubAnimation>> subAnimDict2 = new Dictionary<uint, List<Level5_MINF2.SubAnimation>>();
+
+                foreach (var f in Files)
+                {
+                    if (f.Key.EndsWith(".mtn2"))
+                    {
+                        var anim = new Level5_MTN2();
+                        anim.Open(f.Key, f.Value);
+                        GenericAnimation newAnimation = anim.ToGenericAnimation();
+                        animDict.Add(CRC32.Crc32C(newAnimation.Name), newAnimation);
+                    }
+                    else if (f.Key.EndsWith(".mtn3"))
+                    {
+                        var anim = new Level5_MTN3();
+                        anim.Open(f.Key, f.Value);
+                        GenericAnimation newAnimation = anim.ToGenericAnimation();
+                        animDict.Add(CRC32.Crc32C(newAnimation.Name), newAnimation);
+                    }
+                    else if (f.Key.EndsWith(".mtninf"))
+                    {
+                        var subAnim = new Level5_MINF();
+                        subAnim.Open(f.Value);
+                        
+                        if (!subAnimDict.ContainsKey(subAnim.AnimationName))
+                        {
+                            subAnimDict.Add(subAnim.AnimationName, new List<Level5_MINF>());
+                        }
+
+                        subAnimDict[subAnim.AnimationName].Add(subAnim);
+                    }
+                    else if (f.Key.EndsWith(".mtninf2"))
+                    {
+                        var mtninf2 = new Level5_MINF2();
+                        mtninf2.Open(f.Value);
+
+                        Console.WriteLine("mtninf2 " + mtninf2.SubAnimations.Count);
+
+                        foreach (Level5_MINF2.SubAnimation subAnimation in mtninf2.SubAnimations)
+                        {
+                            Console.WriteLine(subAnimation.AnimationName.ToString("X8"));
+
+                            if (!subAnimDict2.ContainsKey(subAnimation.AnimationName))
+                            {
+                                subAnimDict2.Add(subAnimation.AnimationName, new List<Level5_MINF2.SubAnimation>());
+                            }
+
+                            subAnimDict2[subAnimation.AnimationName].Add(subAnimation);
+                        }                      
+                    }
+                }
+
+                foreach (KeyValuePair<uint, GenericAnimation> kvp in animDict)
+                {
+                    animations.Add(kvp.Value);
+
+                    if (subAnimDict.ContainsKey(kvp.Key))
+                    {
+                        foreach (Level5_MINF minf in subAnimDict[kvp.Key])
+                        {
+                            GenericAnimation newAnimation = kvp.Value.TrimAnimation(minf.FrameStart, minf.FrameEnd);
+                            newAnimation.Name = kvp.Value.Name + "_" + minf.AnimationSubName.ToString("X8");                         
+                            animations.Add(newAnimation);
+                        }
+                    }
+
+                    if (subAnimDict2.ContainsKey(kvp.Key))
+                    {
+                        foreach (Level5_MINF2.SubAnimation subAnimations in subAnimDict2[kvp.Key])
+                        {
+                            GenericAnimation newAnimation = kvp.Value.TrimAnimation(subAnimations.FrameStart, subAnimations.FrameEnd);
+                            newAnimation.Name = kvp.Value.Name + "_" + subAnimations.AnimationSubName;
+                            animations.Add(newAnimation);
+                        }
+                    }
+
+
+                }
+
+                return animations.ToArray();
+            } else
+            {
+                return null;
+            }
         }
 
         public bool Verify(FileItem file)

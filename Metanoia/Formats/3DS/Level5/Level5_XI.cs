@@ -57,6 +57,9 @@ namespace Metanoia.Formats._3DS.Level5
                 tex.FromBitmap(texture);
                 texture.Dispose();
             }
+
+            tex.PixelFormatTrue = xi.ImageFormat;
+
             return tex;
         }
 

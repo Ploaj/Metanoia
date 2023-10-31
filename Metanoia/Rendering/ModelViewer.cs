@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Drawing;
 using System.Windows.Forms;
 using OpenTK;
@@ -8,6 +9,7 @@ using Metanoia.GUI;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Metanoia.Formats;
+using Metanoia.Formats._3DS.Level5;
 
 namespace Metanoia.Rendering
 {
@@ -506,7 +508,21 @@ namespace Metanoia.Rendering
                 {
                     foreach (String filename in d.FileNames)
                     {
-                        if (FormatManager.Instance.Open(new FileItem(filename)) is IAnimationFormat anim)
+                        if (Path.GetExtension(filename) == ".xc")
+                        {
+                            Level5_XC animArchive = new Level5_XC();
+                            animArchive.Open(new FileItem(filename, File.ReadAllBytes(filename)));
+                            GenericAnimation[] animations = animArchive.ToGenericAnimation();
+
+                            if (animations != null)
+                            {
+                                foreach (GenericAnimation animation in animArchive.ToGenericAnimation())
+                                {
+                                    AddAnimation(animation);
+                                }
+                            }
+
+                        } else if (FormatManager.Instance.Open(new FileItem(filename)) is IAnimationFormat anim)
                         {
                             AddAnimation(anim.ToGenericAnimation());
                         }

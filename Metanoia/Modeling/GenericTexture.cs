@@ -17,6 +17,8 @@ namespace Metanoia.Modeling
 
         public uint Height { get; set; }
 
+        public byte PixelFormatTrue { get; set; }
+
         public int Id;
 
         public List<byte[]> Mipmaps = new List<byte[]>();

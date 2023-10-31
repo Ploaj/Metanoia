@@ -60,7 +60,41 @@ namespace Metanoia.Tools
                             case Tex_Formats.RGBA8: colors[i] = Decode8888(data[p++], data[p++], data[p++], data[p++]); break;
                             case Tex_Formats.RGB8: colors[i] = Decode888(data[p++], data[p++], data[p++]); break;
                             case Tex_Formats.RGBA5551: colors[i] = Decode5551(data[p++], data[p++]); break;
-                            case Tex_Formats.RGB565: colors[i] = Decode565(data[p++], data[p++]); break;
+                            case Tex_Formats.RGB565: 
+                                {
+                                    try
+                                    {
+                                        colors[i] = _3DSImageTools.Decode565((int)data[p++], (int)data[p++]);
+                                        break;
+                                    }
+                                    catch (IndexOutOfRangeException)
+                                    {
+                                        for (h = 0; h < height; h += 8)
+                                        {
+                                            for (w = 0; w < width; w += 8)
+                                            {
+                                                colors = new int[64];
+                                                for (i = 0; i < 64; i++)
+                                                {
+                                                    if (type == _3DSImageTools.Tex_Formats.RGB565)
+                                                    {
+                                                        colors[i] = 100;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        for (int bh = 0; bh < 8; bh++)
+                                        {
+                                            for (int bw = 0; bw < 8; bw++)
+                                            {
+                                            }
+                                        }
+                                    }
+                                    BitmapData bmpData2 = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, bmp.PixelFormat);
+                                    Marshal.Copy(pixels, 0, bmpData2.Scan0, pixels.Length);
+                                    bmp.UnlockBits(bmpData2);
+                                    return bmp;
+                                }
                             case Tex_Formats.RGBA4444: colors[i] = Decode4444(data[p++], data[p++]); break;
                             case Tex_Formats.LA8: colors[i] = DecodeLA8(data[p++], data[p++]); break;
                             case Tex_Formats.HILO8: colors[i] = decodeHILO8(data[p++], data[p++]); break;
