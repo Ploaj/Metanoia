@@ -600,11 +600,37 @@ namespace Metanoia.Rendering
         /// <param name="e"></param>
         private void exportAnimationToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(animationCB.SelectedItem is GenericAnimation anim)
+            if (animationCB.Items.Count > 1)
+            {
+                DialogResult dialogResult = MessageBox.Show("Multiple animation detected, do you want to export all animations as SMD?", "Export Multiple Animation", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.Yes)
+                {
+                    using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+                    {
+                        if (dialog.ShowDialog() == DialogResult.OK)
+                        {
+                            string path = dialog.SelectedPath;
+
+                            foreach(GenericAnimation animItem in animationCB.Items)
+                            {
+                                Exporting.ExportSMD smdExporter = new Exporting.ExportSMD();
+                                smdExporter.Export(path + "/" + animItem.Name + ".smd", Model.Skeleton, animItem);
+                            }
+
+                            MessageBox.Show("Exported!");
+                        }
+                    }
+
+                    return;
+                }
+            }
+
+            if (animationCB.SelectedItem is GenericAnimation anim)
             {
                 IsPlaying = false;
                 Frame = 0;
                 FormatManager.Instance.ExportAnimation(Model.Skeleton, anim);
+                MessageBox.Show("Exported!");
             }
         }
 

@@ -78,8 +78,6 @@ namespace Metanoia.Formats._3DS.Level5
                     reader.Skip(0x04);
                 }
 
-                Console.WriteLine("FrameOffset = " + reader.Position);
-
                 using (DataReader dataReader = new DataReader(Decompress.Level5Decom(reader.GetSection(reader.Position, (int)(reader.Length - reader.Position)))))
                 {
                     // Bone Hashes
@@ -121,10 +119,6 @@ namespace Metanoia.Formats._3DS.Level5
                         node.HashType = AnimNodeHashType.CRC32C;
                         anim.TransformNodes.Add(node);
                     }
-
-                    Console.WriteLine("FlagOffset " + animTableOffset[0].FlagOffset);
-                    Console.WriteLine("KeyFrameOffset " + animTableOffset[0].KeyFrameOffset);
-                    Console.WriteLine("KeyDataOffset " + animTableOffset[0].KeyDataOffset);
 
                     using (DataReader animDataReader = new DataReader(dataReader.GetSection(dataReader.Position, (int)(dataReader.Length - dataReader.Position))))
                     {
@@ -138,105 +132,7 @@ namespace Metanoia.Formats._3DS.Level5
 
         public void Open(FileItem file)
         {
-            anim.Name = file.FilePath;
-
-            using (DataReader reader = new DataReader(file))
-            {
-                reader.BigEndian = false;
-
-                reader.Seek(0x04);
-                int hashOffset = reader.ReadInt16() - 4;
-                int nameOffset = reader.ReadInt16() - 4;
-                int animOffset = reader.ReadInt16() - hashOffset - 4;
-                reader.Skip(0x06);
-                int compDataLength = reader.ReadInt32();
-                reader.Skip(0x04);
-                int positionCount = reader.ReadInt32();
-                int rotationCount = reader.ReadInt32();
-                int scaleCount = reader.ReadInt32();
-                int unknownCount = reader.ReadInt32();
-                int boneCount = reader.ReadInt32();
-
-                reader.Seek((uint)hashOffset);
-                var hash = reader.ReadUInt32();
-                anim.Name = reader.ReadString(reader.Position, -1);
-
-                reader.Seek((uint)animOffset);
-                Console.WriteLine("hashOffset = " + hashOffset);
-                anim.FrameCount = reader.ReadInt32();
-                short positionTrackOffset = reader.ReadInt16();
-                short rotationTrackOffset = reader.ReadInt16();
-                short scaleTrackOffset = reader.ReadInt16();
-                short unknownTrackOffset = reader.ReadInt16();
-
-                List<AnimTableOffset> animTableOffset = new List<AnimTableOffset>();
-                for (int i = 0; i < positionCount + rotationCount + scaleCount + unknownCount; i++)
-                {
-                    animTableOffset.Add(new AnimTableOffset()
-                    {
-                        FlagOffset = reader.ReadInt32(),
-                        KeyFrameOffset = reader.ReadInt32(),
-                        KeyDataOffset = reader.ReadInt32(),
-                    });
-                    reader.Skip(0x04);
-                }
-
-                Console.WriteLine("FrameOffset = " + reader.Position);
-
-                using (DataReader dataReader = new DataReader(Decompress.Level5Decom(reader.GetSection(reader.Position, (int)(reader.Length - reader.Position)))))
-                {
-                    // Bone Hashes
-                    List<uint> boneNameHashes = new List<uint>();
-                    for (int i = 0; i < boneCount; i++)
-                    {
-                        boneNameHashes.Add(dataReader.ReadUInt32());
-                    }
-
-                    // Track Information
-                    List<AnimTrack> Tracks = new List<AnimTrack>();
-                    dataReader.Seek((uint)positionTrackOffset);
-                    for (int i = 0; i < 4; i++)
-                    {
-                        Tracks.Add(new AnimTrack()
-                        {
-                            Type = dataReader.ReadByte(),
-                            DataType = dataReader.ReadByte(),
-                            unk = dataReader.ReadByte(),
-                            DataCount = dataReader.ReadByte(),
-                            Start = dataReader.ReadUInt16(),
-                            End = dataReader.ReadUInt16()
-                        });
-                    }
-
-                    foreach (var v in Tracks)
-                        Console.WriteLine(v.Type + " "
-                            + v.DataType + " "
-                            + v.DataCount
-                            + " " + v.Start.ToString("X")
-                             + " " + v.End.ToString("X"));
-
-                    // Data
-
-                    foreach (var v in boneNameHashes)
-                    {
-                        var node = new GenericAnimationTransform();
-                        node.Hash = v;
-                        node.HashType = AnimNodeHashType.CRC32C;
-                        anim.TransformNodes.Add(node);
-                    }
-
-                    Console.WriteLine("FlagOffset " + animTableOffset[0].FlagOffset);
-                    Console.WriteLine("KeyFrameOffset " + animTableOffset[0].KeyFrameOffset);
-                    Console.WriteLine("KeyDataOffset " + animTableOffset[0].KeyDataOffset);
-
-                    using (DataReader animDataReader = new DataReader(dataReader.GetSection(dataReader.Position, (int)(dataReader.Length - dataReader.Position))))
-                    {
-                        ReadFrameData(animDataReader, animTableOffset.Take(positionCount).ToList(), boneCount, Tracks[0]);
-                        ReadFrameData(animDataReader, animTableOffset.Skip(positionCount).Take(rotationCount).ToList(), boneCount, Tracks[1]);
-                        ReadFrameData(animDataReader, animTableOffset.Skip(positionCount + rotationCount).Take(scaleCount).ToList(), boneCount, Tracks[2]);
-                    }
-                }
-            }
+            Open(file.FilePath, file.GetFileBinary());
         }
 
         private void ReadFrameData(DataReader dataReader, List<AnimTableOffset> animTableOffset, int boneCount, AnimTrack Track)

@@ -1,5 +1,6 @@
 ﻿using Metanoia.Tools;
 using System;
+using System.Text;
 using System.Collections.Generic;
 
 namespace Metanoia.Formats._3DS.Level5
@@ -39,13 +40,14 @@ namespace Metanoia.Formats._3DS.Level5
             var resourceNodeCount = r.ReadInt16();
 
             r.Seek((uint)stringTableOffset);
+            Encoding shiftJIS = Encoding.GetEncoding("Shift-JIS");
             while (r.Position < r.BaseStream.Length)
             {
-                string mname = r.ReadString();
+                string mname = r.ReadString(shiftJIS);
                 if (mname == "")
                     break;
-                if (!ResourceNames.ContainsKey(CRC32.Crc32C(mname)))
-                    ResourceNames.Add(CRC32.Crc32C(mname), mname);
+                if (!ResourceNames.ContainsKey(CRC32.Crc32C(mname, shiftJIS)))
+                    ResourceNames.Add(CRC32.Crc32C(mname, shiftJIS), mname);
             }
 
             r.Seek((uint)materialTableOffset);

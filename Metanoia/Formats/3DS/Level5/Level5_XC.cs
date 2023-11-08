@@ -230,6 +230,8 @@ namespace Metanoia.Formats._3DS.Level5
             
             if (motionCount + subMotionCount > 0)
             {
+                Level5_Resource resourceFile = null;
+
                 List<GenericAnimation> animations = new List<GenericAnimation>();
                 Dictionary<uint, GenericAnimation> animDict = new Dictionary<uint, GenericAnimation>();
                 Dictionary<uint, List<Level5_MINF>> subAnimDict = new Dictionary<uint, List<Level5_MINF>>();
@@ -237,7 +239,11 @@ namespace Metanoia.Formats._3DS.Level5
 
                 foreach (var f in Files)
                 {
-                    if (f.Key.EndsWith(".mtn2"))
+                    if (f.Key.EndsWith("RES.bin"))
+                    {
+                        resourceFile = new Level5_Resource(f.Value);
+                    }
+                    else if (f.Key.EndsWith(".mtn2"))
                     {
                         var anim = new Level5_MTN2();
                         anim.Open(f.Key, f.Value);
@@ -293,7 +299,19 @@ namespace Metanoia.Formats._3DS.Level5
                         foreach (Level5_MINF minf in subAnimDict[kvp.Key])
                         {
                             GenericAnimation newAnimation = kvp.Value.TrimAnimation(minf.FrameStart, minf.FrameEnd);
-                            newAnimation.Name = kvp.Value.Name + "_" + minf.AnimationSubName.ToString("X8");                         
+
+                            string animationSubName = minf.AnimationSubName.ToString("X8");
+                            if (resourceFile != null)
+                            {
+                                animationSubName = resourceFile.GetResourceName(minf.AnimationSubName);
+
+                                if (animationSubName == "")
+                                {
+                                    animationSubName = minf.AnimationSubName.ToString("X8");
+                                }
+                            }
+
+                            newAnimation.Name = kvp.Value.Name + "_" + animationSubName;                         
                             animations.Add(newAnimation);
                         }
                     }

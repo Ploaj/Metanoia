@@ -114,6 +114,8 @@ namespace Metanoia
                 text.Add(ch);
             }
 
+            Console.WriteLine(BitConverter.ToString(text.ToArray()).Replace("-",""));
+
             return encoding.GetString(text.ToArray());
         }
 
