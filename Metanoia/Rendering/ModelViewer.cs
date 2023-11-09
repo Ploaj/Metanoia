@@ -418,7 +418,7 @@ namespace Metanoia.Rendering
             Viewport.Invalidate();
         }
 
-        private int PrevX, PrevY;
+        private int PrevX, PrevY, PrevZ;
 
         private ModelInfoPanel ModelPanel = new ModelInfoPanel();
 
@@ -634,6 +634,17 @@ namespace Metanoia.Rendering
             }
         }
 
+        private void ZoomIn(object sender, MouseEventArgs e)
+        {
+            if (e.Delta > 0)
+            {
+                Z += PrevZ + 0.1f / 5;
+            } else if (e.Delta < 0)
+            {
+                Z += PrevZ - 0.1f / 5;
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -655,6 +666,8 @@ namespace Metanoia.Rendering
                 X -= (PrevX - e.X) * 0.75f * speed;
                 Y += (PrevY - e.Y) * 0.75f * speed;
             }
+            Viewport.MouseWheel += ZoomIn;
+            ZoomIn(sender, e);
             PrevX = e.X;
             PrevY = e.Y;
         }
