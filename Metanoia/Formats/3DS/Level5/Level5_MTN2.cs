@@ -210,10 +210,12 @@ namespace Metanoia.Formats._3DS.Level5
 
                 d.Seek(flagOffset);
                 var boneIndex = d.ReadInt16();
-                var keyFrameCount = d.ReadByte();
-                var flag = d.ReadByte();
+                var lowFrameCount = d.ReadByte();
+                var hightFrameCount = d.ReadByte() - 32;
+
+                int keyFrameCount = (hightFrameCount << 8) | lowFrameCount;
                 
-                var node = anim.TransformNodes[boneIndex + (flag == 0 ? boneCount : 0)];
+                var node = anim.TransformNodes[boneIndex];
 
                 d.Seek(keyDataOffset);
                 for (int k = 0; k < keyFrameCount; k++)

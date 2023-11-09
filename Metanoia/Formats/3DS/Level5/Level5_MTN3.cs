@@ -141,10 +141,12 @@ namespace Metanoia.Formats._3DS.Level5
             {
                 dataReader.Seek((uint)animTableOffset[i].FlagOffset);
                 var boneIndex = dataReader.ReadInt16();
-                var keyFrameCount = dataReader.ReadByte();
-                var flag = dataReader.ReadByte();
+                var lowFrameCount = dataReader.ReadByte();
+                var hightFrameCount = dataReader.ReadByte() - 32;
 
-                var node = anim.TransformNodes[boneIndex + (flag == 0 ? boneCount : 0)];
+                int keyFrameCount = (hightFrameCount << 8) | lowFrameCount;
+
+                var node = anim.TransformNodes[boneIndex];
 
                 dataReader.Seek((uint)animTableOffset[i].KeyDataOffset);
                 for (int k = 0; k < keyFrameCount; k++)
