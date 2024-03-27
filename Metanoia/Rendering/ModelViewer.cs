@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Drawing;
 using System.Windows.Forms;
 using OpenTK;
@@ -8,6 +9,7 @@ using Metanoia.GUI;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Metanoia.Formats;
+using Metanoia.Formats._3DS.Level5;
 
 namespace Metanoia.Rendering
 {
@@ -416,7 +418,7 @@ namespace Metanoia.Rendering
             Viewport.Invalidate();
         }
 
-        private int PrevX, PrevY;
+        private int PrevX, PrevY, PrevZ;
 
         private ModelInfoPanel ModelPanel = new ModelInfoPanel();
 
@@ -506,7 +508,21 @@ namespace Metanoia.Rendering
                 {
                     foreach (String filename in d.FileNames)
                     {
-                        if (FormatManager.Instance.Open(new FileItem(filename)) is IAnimationFormat anim)
+                        if (Path.GetExtension(filename) == ".xc")
+                        {
+                            Level5_XC animArchive = new Level5_XC();
+                            animArchive.Open(new FileItem(filename, File.ReadAllBytes(filename)));
+                            GenericAnimation[] animations = animArchive.ToGenericAnimation();
+
+                            if (animations != null)
+                            {
+                                foreach (GenericAnimation animation in animArchive.ToGenericAnimation())
+                                {
+                                    AddAnimation(animation);
+                                }
+                            }
+
+                        } else if (FormatManager.Instance.Open(new FileItem(filename)) is IAnimationFormat anim)
                         {
                             AddAnimation(anim.ToGenericAnimation());
                         }
@@ -584,11 +600,48 @@ namespace Metanoia.Rendering
         /// <param name="e"></param>
         private void exportAnimationToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(animationCB.SelectedItem is GenericAnimation anim)
+            if (animationCB.Items.Count > 1)
+            {
+                DialogResult dialogResult = MessageBox.Show("Multiple animation detected, do you want to export all animations as SMD?", "Export Multiple Animation", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.Yes)
+                {
+                    using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+                    {
+                        if (dialog.ShowDialog() == DialogResult.OK)
+                        {
+                            string path = dialog.SelectedPath;
+
+                            foreach(GenericAnimation animItem in animationCB.Items)
+                            {
+                                Exporting.ExportSMD smdExporter = new Exporting.ExportSMD();
+                                smdExporter.Export(path + "/" + animItem.Name + ".smd", Model.Skeleton, animItem);
+                            }
+
+                            MessageBox.Show("Exported!");
+                        }
+                    }
+
+                    return;
+                }
+            }
+
+            if (animationCB.SelectedItem is GenericAnimation anim)
             {
                 IsPlaying = false;
                 Frame = 0;
                 FormatManager.Instance.ExportAnimation(Model.Skeleton, anim);
+                MessageBox.Show("Exported!");
+            }
+        }
+
+        private void ZoomIn(object sender, MouseEventArgs e)
+        {
+            if (e.Delta > 0)
+            {
+                Z += PrevZ + 0.1f / 5;
+            } else if (e.Delta < 0)
+            {
+                Z += PrevZ - 0.1f / 5;
             }
         }
 
@@ -613,6 +666,8 @@ namespace Metanoia.Rendering
                 X -= (PrevX - e.X) * 0.75f * speed;
                 Y += (PrevY - e.Y) * 0.75f * speed;
             }
+            Viewport.MouseWheel += ZoomIn;
+            ZoomIn(sender, e);
             PrevX = e.X;
             PrevY = e.Y;
         }

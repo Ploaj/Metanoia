@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -28,26 +30,28 @@ namespace Metanoia.Tools
 
         public static byte[] Level5Decom(byte[] b)
         {
-            int tableType = (b[0] & 0xFF);
+            int compressionType = (b[0] & 0x7);
 
             byte[] t;
 
             if (CheckLevel5Zlib(b, out t))
                 return t;
 
-            switch (tableType & 0xF)
+            Console.WriteLine(compressionType);
+
+            switch (compressionType)
             {
                 case 0x01:
-                    t = (lzss_Decompress(b));
+                    t = LZ10Decompress(b);
                     break;
                 case 0x02:
-                    t = (Huffman_Decompress(b, (byte)0x24));
+                    t = Huffman_Decompress(b, 4);
                     break;
                 case 0x03:
-                    t = (Huffman_Decompress(b, (byte)0x28));
+                    t = Huffman_Decompress(b, 8);
                     break;
                 case 0x04:
-                    t = (rle_Decompress(b));
+                    t = rle_Decompress(b);
                     break;
                 default:
                     t = new byte[b.Length - 4];
@@ -375,293 +379,329 @@ namespace Metanoia.Tools
 
         }
 
-        public static byte[] lzss_Decompress(byte[] data)
+        public static byte[] LZ10Decompress(byte[] data)
         {
-            List<byte> o = new List<byte>();
-
-            int p = 4;
-            int op = 0;
-
-            int mask = 0;
-            int flag = 0;
-
-            while (p < data.Length)
+            using (var input = new MemoryStream(data))
             {
-                if (mask == 0)
-                {
-                    flag = (data[p++] & 0xFF);
-                    //					System.out.println(Integer.toHexString(flag));
-                    mask = 0x80;
-                }
+                return LZ10Decoder(input, (int)input.Length);
+            }
+        }
 
-                if ((flag & mask) == 0)
+        public static byte[] LZ10Decoder(Stream instream, int decompressedSize)
+        {
+            var compressionHeader = new byte[4];
+            instream.Read(compressionHeader, 0, 4);
+            if ((compressionHeader[0] & 0x7) != 0x1)
+                throw new Exception("Level5 LZ10");
+
+            decompressedSize = (compressionHeader[0] >> 3) | (compressionHeader[1] << 5) |
+                                   (compressionHeader[2] << 13) | (compressionHeader[3] << 21);
+
+            long inLength = instream.Length;
+            MemoryStream outstream = new MemoryStream();
+
+            long readBytes = 0;
+
+            // the maximum 'DISP-1' is 0xFFF.
+            int bufferLength = 0x1000;
+            byte[] buffer = new byte[bufferLength];
+            int bufferOffset = 0;
+
+
+            int currentOutSize = 0;
+            int flags = 0, mask = 1;
+            while (currentOutSize < decompressedSize)
+            {
+                // (throws when requested new flags byte is not available)
+                #region Update the mask. If all flag bits have been read, get a new set.
+                // the current mask is the mask used in the previous run. So if it masks the
+                // last flag bit, get a new flags byte.
+                if (mask == 1)
                 {
-                    if (p + 1 > data.Length) break;
-                    o.Add(data[p++]);
-                    op++;
+                    if (readBytes >= inLength)
+                        throw new Exception("Not enough data: " + currentOutSize.ToString() + ", " + decompressedSize.ToString());
+                    flags = instream.ReadByte(); readBytes++;
+                    if (flags < 0)
+                        throw new Exception("Stream too short!");
+                    mask = 0x80;
                 }
                 else
                 {
-                    if (p + 2 > data.Length) break;
-                    int dat = ((data[p++] & 0xFF) << 8) | (data[p++] & 0xFF);
-                    int pos = (dat & 0x0FFF) + 1;
-                    int length = (dat >> 12) + 3;
+                    mask >>= 1;
+                }
+                #endregion
 
-                    //				System.out.println(Integer.toHexString(dat) + "\t" + pos + "\t" + length);
+                // bit = 1 <=> compressed.
+                if ((flags & mask) > 0)
+                {
+                    // (throws when < 2 bytes are available)
+                    #region Get length and displacement('disp') values from next 2 bytes
+                    // there are < 2 bytes available when the end is at most 1 byte away
+                    if (readBytes + 1 >= inLength)
+                    {
+                        // make sure the stream is at the end
+                        if (readBytes < inLength)
+                        {
+                            instream.ReadByte(); readBytes++;
+                        }
+                        throw new Exception("Not enough data: " + currentOutSize.ToString() + ", " + decompressedSize.ToString());
+                    }
+                    int byte1 = instream.ReadByte(); readBytes++;
+                    int byte2 = instream.ReadByte(); readBytes++;
+                    if (byte2 < 0)
+                        throw new Exception("Stream too short!");
 
+                    // the number of bytes to copy
+                    int length = byte1 >> 4;
+                    length += 3;
+
+                    // from where the bytes should be copied (relatively)
+                    int disp = ((byte1 & 0x0F) << 8) | byte2;
+                    disp += 1;
+
+                    if (disp > currentOutSize)
+                        throw new Exception("Cannot go back more than already written. "
+                                + "DISP = 0x" + disp.ToString("X") + ", #written bytes = 0x" + currentOutSize.ToString("X")
+                                + " at 0x" + (instream.Position - 2).ToString("X"));
+                    #endregion
+
+                    int bufIdx = bufferOffset + bufferLength - disp;
                     for (int i = 0; i < length; i++)
                     {
-                        if (op - pos >= 0)
-                        {
-                            o.Add(o[op - pos >= o.Count ? 0 : op - pos]);
-                            op++;
-                        }
+                        byte next = buffer[bufIdx % bufferLength];
+                        bufIdx++;
+                        outstream.WriteByte(next);
+                        buffer[bufferOffset] = next;
+                        bufferOffset = (bufferOffset + 1) % bufferLength;
                     }
+                    currentOutSize += length;
                 }
-                mask >>= 1;
+                else
+                {
+                    if (readBytes >= inLength)
+                        throw new Exception("Not enough data: " + currentOutSize.ToString() + ", " + decompressedSize.ToString());
+                    int next = instream.ReadByte(); readBytes++;
+                    if (next < 0)
+                        throw new Exception("Stream too short!");
+
+                    currentOutSize++;
+                    outstream.WriteByte((byte)next);
+                    buffer[bufferOffset] = (byte)next;
+                    bufferOffset = (bufferOffset + 1) % bufferLength;
+                }
+                outstream.Flush();
             }
 
+            outstream.Position = 0;
+            return outstream.ToArray();
+        }
 
-            //Console.WriteLine("decompress " + p.ToString("x") + " " + data.Length.ToString("x"));
-            return o.ToArray();
+        public static unsafe int GetOccurrenceLength(byte* newPtr, int newLength, byte* oldPtr, int oldLength, out int disp, int minDisp = 1)
+        {
+            disp = 0;
+            if (newLength == 0)
+                return 0;
+            int maxLength = 0;
+            // try every possible 'disp' value (disp = oldLength - i)
+            for (int i = 0; i < oldLength - minDisp; i++)
+            {
+                // work from the start of the old data to the end, to mimic the original implementation's behaviour
+                // (and going from start to end or from end to start does not influence the compression ratio anyway)
+                byte* currentOldStart = oldPtr + i;
+                int currentLength = 0;
+                // determine the length we can copy if we go back (oldLength - i) bytes
+                // always check the next 'newLength' bytes, and not just the available 'old' bytes,
+                // as the copied data can also originate from what we're currently trying to compress.
+                for (int j = 0; j < newLength; j++)
+                {
+                    // stop when the bytes are no longer the same
+                    if (*(currentOldStart + j) != *(newPtr + j))
+                        break;
+                    currentLength++;
+                }
+
+                // update the optimal value
+                if (currentLength > maxLength)
+                {
+                    maxLength = currentLength;
+                    disp = oldLength - i;
+
+                    // if we cannot do better anyway, stop trying.
+                    if (maxLength == newLength)
+                        break;
+                }
+            }
+            return maxLength;
         }
 
         public static byte[] rle_Decompress(byte[] instream)
         {
-            long inLength = instream.Length;
-            long ReadBytes = 0;
-            int p = 0;
-
-            p++;
-
-            int decompressedSize = (instream[p++] & 0xFF)
-                    | ((instream[p++] & 0xFF) << 8)
-                    | ((instream[p++] & 0xFF) << 16);
-            ReadBytes += 4;
-            if (decompressedSize == 0)
+            using (var input = new MemoryStream(instream))
+            using (var output = new MemoryStream())
             {
-                decompressedSize = decompressedSize
-                        | ((instream[p++] & 0xFF) << 24);
-                ReadBytes += 4;
-            }
+                var decoder = new RleDecoder();
+                decoder.Decode(input, output);
 
-            List<byte> outstream = new List<byte>();
-
-            while (p < instream.Length)
-            {
-
-                int flag = (byte)instream[p++];
-                ReadBytes++;
-
-                bool compressed = (flag & 0x80) > 0;
-                int length = flag & 0x7F;
-
-                if (compressed)
-                    length += 3;
-                else
-                    length += 1;
-
-                if (compressed)
-                {
-
-                    int data = (byte)instream[p++];
-                    ReadBytes++;
-
-                    byte bdata = (byte)data;
-                    for (int i = 0; i < length; i++)
-                    {
-                        outstream.Add(bdata);
-                    }
-
-                }
-                else
-                {
-
-                    int tryReadLength = length;
-                    if (ReadBytes + length > inLength)
-                        tryReadLength = (int)(inLength - ReadBytes);
-
-                    ReadBytes += tryReadLength;
-
-                    for (int i = 0; i < tryReadLength; i++)
-                    {
-                        outstream.Add((byte)(instream[p++] & 0xFF));
-                    }
-                }
-            }
-
-            if (ReadBytes < inLength)
-            {
-            }
-
-            return outstream.ToArray();
-        }
-
-        public class HUFF_STREAM
-        {
-            public byte[] bytes;
-            public int p = 0;
-            public int length;
-            public HUFF_STREAM(byte[] b)
-            {
-                bytes = b;
-                length = b.Length;
-            }
-
-            public bool hasBytes()
-            {
-                return p < bytes.Length;
-            }
-
-            public int ReadByte()
-            {
-                return bytes[p++] & 0xFF;
-            }
-            public int readThree()
-            {
-                return ((bytes[p++] & 0xFF)) | ((bytes[p++] & 0xFF) << 8) | ((bytes[p++] & 0xFF) << 16);
-            }
-            public int ReadInt32()
-            {
-                if (p >= length)
-                    return 0;
-                else
-                    return ((bytes[p++] & 0xFF)) | ((bytes[p++] & 0xFF) << 8) | ((bytes[p++] & 0xFF) << 16) | ((bytes[p++] & 0xFF) << 24);
+                return output.ToArray();
             }
         }
 
-        public class HuffTreeNode
+        // RLE From Kuriimu2
+
+        public class RleHeaderlessDecoder
         {
-            public byte data;
-            public bool isData;
-            public HuffTreeNode child0; public HuffTreeNode child1;
-            public HuffTreeNode(HUFF_STREAM stream, bool isData, long relOffset, long maxStreamPos)
+            public void Decode(Stream input, Stream output, int decompressedSize)
             {
-                if (stream.p >= maxStreamPos)
+                while (output.Length < decompressedSize)
                 {
-                    return;
-                }
-                int readData = stream.ReadByte();
-                this.data = (byte)readData;
-
-                this.isData = isData;
-
-                if (!this.isData)
-                {
-                    int offset = this.data & 0x3F;
-                    bool zeroIsData = (this.data & 0x80) > 0;
-                    bool oneIsData = (this.data & 0x40) > 0;
-
-                    long zeroRelOffset = (relOffset ^ (relOffset & 1)) + (offset * 2) + 2;
-
-                    int currStreamPos = stream.p;
-                    stream.p += (int)(zeroRelOffset - relOffset) - 1;
-                    this.child0 = new HuffTreeNode(stream, zeroIsData, zeroRelOffset, maxStreamPos);
-                    this.child1 = new HuffTreeNode(stream, oneIsData, zeroRelOffset + 1, maxStreamPos);
-
-                    stream.p = currStreamPos;
+                    var flag = input.ReadByte();
+                    if ((flag & 0x80) > 0)
+                    {
+                        var repetitions = (flag & 0x7F) + 3;
+                        output.Write(Enumerable.Repeat((byte)input.ReadByte(), repetitions).ToArray(), 0, repetitions);
+                    }
+                    else
+                    {
+                        var length = flag + 1;
+                        var uncompressedData = new byte[length];
+                        input.Read(uncompressedData, 0, length);
+                        output.Write(uncompressedData, 0, length);
+                    }
                 }
             }
+        }
 
+        public class RleDecoder
+        {
+            private readonly RleHeaderlessDecoder _decoder;
+
+            public RleDecoder()
+            {
+                _decoder = new RleHeaderlessDecoder();
+            }
+
+            public void Decode(Stream input, Stream output)
+            {
+                var compressionHeader = new byte[4];
+                input.Read(compressionHeader, 0, 4);
+                if ((compressionHeader[0] & 0x7) != 0x4)
+                    throw new Exception("Level5 Rle");
+
+                var decompressedSize = (compressionHeader[0] >> 3) | (compressionHeader[1] << 5) |
+                                       (compressionHeader[2] << 13) | (compressionHeader[3] << 21);
+
+                _decoder.Decode(input, output, decompressedSize);
+            }
+
+            public void Dispose()
+            {
+                // Nothing to dispose
+            }
+        }
+
+        // HuffmanDecoder & HuffmanHeaderlessDecoder From Kuriimu2
+        public class HuffmanDecoder
+        {
+            private readonly int _bitDepth;
+            private readonly HuffmanHeaderlessDecoder _decoder;
+
+            public HuffmanDecoder(int bitDepth, NibbleOrder nibbleOrder)
+            {
+                _bitDepth = bitDepth;
+
+                _decoder = new HuffmanHeaderlessDecoder(bitDepth, nibbleOrder);
+            }
+
+            public void Decode(Stream input, Stream output)
+            {
+                var compressionHeader = new byte[4];
+                input.Read(compressionHeader, 0, 4);
+
+                var huffmanMode = _bitDepth == 4 ? 2 : 3;
+                if ((compressionHeader[0] & 0x7) != huffmanMode)
+                    throw new InvalidDataException($"Level5 Huffman{_bitDepth}");
+
+                var decompressedSize = (compressionHeader[0] >> 3) | (compressionHeader[1] << 5) |
+                                       (compressionHeader[2] << 13) | (compressionHeader[3] << 21);
+
+                _decoder.Decode(input, output, decompressedSize);
+            }
+
+            public void Dispose()
+            {
+                // nothing to dispose
+            }
+        }
+
+        public class HuffmanHeaderlessDecoder
+        {
+            private readonly int _bitDepth;
+            private readonly NibbleOrder _nibbleOrder;
+
+            public HuffmanHeaderlessDecoder(int bitDepth, NibbleOrder nibbleOrder)
+            {
+                _bitDepth = bitDepth;
+                _nibbleOrder = nibbleOrder;
+            }
+
+            public void Decode(Stream input, Stream output, int decompressedSize)
+            {
+                var result = new byte[decompressedSize * 8 / _bitDepth];
+
+                using (var br = new BinaryReader(input, Encoding.ASCII, true))
+                {
+                    var treeSize = br.ReadByte();
+                    var treeRoot = br.ReadByte();
+                    var treeBuffer = br.ReadBytes(treeSize * 2);
+
+                    for (int i = 0, code = 0, next = 0, pos = treeRoot, resultPos = 0; resultPos < result.Length; i++)
+                    {
+                        if (i % 32 == 0)
+                            code = br.ReadInt32();
+
+                        next += ((pos & 0x3F) << 1) + 2;
+                        var direction = (code >> (31 - i)) % 2 == 0 ? 2 : 1;
+                        var leaf = (pos >> 5 >> direction) % 2 != 0;
+
+                        pos = treeBuffer[next - direction];
+                        if (leaf)
+                        {
+                            result[resultPos++] = (byte)pos;
+                            pos = treeRoot;
+                            next = 0;
+                        }
+                    }
+                }
+
+                if (_bitDepth == 8)
+                    output.Write(result, 0, result.Length);
+                else
+                {
+                    var combinedData = _nibbleOrder == NibbleOrder.LowNibbleFirst ?
+                        Enumerable.Range(0, decompressedSize).Select(j => (byte)(result[2 * j] | (result[2 * j + 1] << 4))).ToArray() :
+                        Enumerable.Range(0, decompressedSize).Select(j => (byte)((result[2 * j] << 4) | result[2 * j + 1])).ToArray();
+
+                    output.Write(combinedData, 0, combinedData.Length);
+                }
+            }
+        }
+
+        public enum NibbleOrder
+        {
+            LowNibbleFirst,
+            HighNibbleFirst
         }
 
         public static byte[] Huffman_Decompress(byte[] b, byte atype)
         {
-            HUFF_STREAM instream = new HUFF_STREAM(b);
-            long ReadBytes = 0;
-
-            byte type = (byte)instream.ReadByte();
-            type = atype;
-            if (type != 0x28 && type != 0x24) return b;
-            int decompressedSize = instream.readThree();
-            ReadBytes += 4;
-            if (decompressedSize == 0)
+            using (var input = new MemoryStream(b))
+            using (var output = new MemoryStream())
             {
-                instream.p -= 3;
-                decompressedSize = instream.ReadInt32();
-                ReadBytes += 4;
+                var decoder = new HuffmanDecoder(atype, NibbleOrder.LowNibbleFirst);
+                decoder.Decode(input, output);
+
+                return output.ToArray();
             }
-
-            List<byte> o = new List<byte>();
-
-            int treeSize = instream.ReadByte(); ReadBytes++;
-            treeSize = (treeSize + 1) * 2;
-
-            long treeEnd = (instream.p - 1) + treeSize;
-
-            // the relative offset may be 4 more (when the initial decompressed size is 0), but
-            // since it's relative that doesn't matter, especially when it only matters if
-            // the given value is odd or even.
-            HuffTreeNode rootNode = new HuffTreeNode(instream, false, 5, treeEnd);
-
-            ReadBytes += treeSize;
-            // re-position the stream after the tree (the stream is currently positioned after the root
-            // node, which is located at the start of the tree definition)
-            instream.p = (int)treeEnd;
-
-            // the current u32 we are reading bits from.
-            int data = 0;
-            // the amount of bits left to read from <data>
-            byte bitsLeft = 0;
-
-            // a cache used for writing when the block size is four bits
-            int cachedByte = -1;
-
-            // the current output size
-            HuffTreeNode currentNode = rootNode;
-
-            while (instream.hasBytes())
-            {
-                while (!currentNode.isData)
-                {
-                    // if there are no bits left to read in the data, get a new byte from the input
-                    if (bitsLeft == 0)
-                    {
-                        ReadBytes += 4;
-                        data = instream.ReadInt32();
-                        bitsLeft = 32;
-                    }
-                    // get the next bit
-                    bitsLeft--;
-                    bool nextIsOne = (data & (1 << bitsLeft)) != 0;
-                    // go to the next node, the direction of the child depending on the value of the current/next bit
-                    currentNode = nextIsOne ? currentNode.child1 : currentNode.child0;
-                }
-
-                switch (type)
-                {
-                    case 0x28:
-                        {
-                            // just copy the data if the block size is a full byte
-                            //                        outstream.WriteByte(currentNode.Data);
-                            o.Add(currentNode.data);
-                            break;
-                        }
-                    case 0x24:
-                        {
-                            // cache the first half of the data if the block size is a half byte
-                            if (cachedByte < 0)
-                            {
-                                cachedByte = currentNode.data;
-                            }
-                            else
-                            {
-                                cachedByte |= currentNode.data << 4;
-                                o.Add((byte)cachedByte);
-                                cachedByte = -1;
-                            }
-                            break;
-                        }
-                }
-
-                currentNode = rootNode;
-            }
-
-            if (ReadBytes % 4 != 0)
-                ReadBytes += 4 - (ReadBytes % 4);
-
-
-            return o.ToArray();
         }
 
         public static byte[] ZLIB(byte[] data)
@@ -786,8 +826,6 @@ namespace Metanoia.Tools
 
             return dbuf;
         }
-
-
 
         public static byte[] SRD_Decomp(byte[] data)
         {

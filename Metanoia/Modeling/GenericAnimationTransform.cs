@@ -152,7 +152,7 @@ namespace Metanoia.Modeling
     {
         public AnimationTrackFormat Type { get; internal set; }
 
-        public GenericKeyGroup<float> Keys { get; } = new GenericKeyGroup<float>();
+        public GenericKeyGroup<float> Keys { get; set; } = new GenericKeyGroup<float>();
 
         public GenericTransformTrack(AnimationTrackFormat type)
         {

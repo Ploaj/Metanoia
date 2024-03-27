@@ -25,6 +25,93 @@ namespace Metanoia.Formats._3DS.Level5
             public int End;
         }
 
+        public void Open(string name, byte[] fileContent)
+        {
+            anim.Name = name;
+
+            using (DataReader r = new DataReader(fileContent))
+            {
+                r.BigEndian = false;
+
+                r.Seek(0x08);
+                var decomSize = r.ReadInt32();
+                var nameOffset = r.ReadUInt32();
+                var compDataOffset = r.ReadUInt32();
+                var positionCount = r.ReadInt32();
+                var rotationCount = r.ReadInt32();
+                var scaleCount = r.ReadInt32();
+                var unknownCount = r.ReadInt32();
+                var boneCount = r.ReadInt32();
+
+                r.Seek(0x54);
+                anim.FrameCount = r.ReadInt32();
+
+                r.Seek(nameOffset);
+                var hash = r.ReadUInt32();
+                anim.Name = r.ReadString(r.Position, -1);
+
+                var data = Decompress.Level5Decom(r.GetSection(compDataOffset, (int)(r.Length - compDataOffset)));
+
+                using (DataReader d = new DataReader(data))
+                {
+                    // Header
+                    var boneHashTableOffset = d.ReadUInt32();
+                    var trackInfoOffset = d.ReadUInt32();
+                    var dataOffset = d.ReadUInt32();
+
+                    // Bone Hashes
+                    List<uint> boneNameHashes = new List<uint>();
+                    d.Seek(boneHashTableOffset);
+                    while (d.Position < trackInfoOffset)
+                        boneNameHashes.Add(d.ReadUInt32());
+
+                    // Track Information
+                    List<AnimTrack> Tracks = new List<AnimTrack>();
+                    for (int i = 0; i < 4; i++)
+                    {
+                        d.Seek((uint)(trackInfoOffset + 2 * i));
+                        d.Seek(d.ReadUInt16());
+
+                        Tracks.Add(new AnimTrack()
+                        {
+                            Type = d.ReadByte(),
+                            DataType = d.ReadByte(),
+                            unk = d.ReadByte(),
+                            DataCount = d.ReadByte(),
+                            Start = d.ReadUInt16(),
+                            End = d.ReadUInt16()
+                        });
+                    }
+
+                    foreach (var v in Tracks)
+                        Console.WriteLine(v.Type + " "
+                            + v.DataType + " "
+                            + v.DataCount
+                            + " " + v.Start.ToString("X")
+                             + " " + v.End.ToString("X"));
+
+                    // Data
+
+                    foreach (var v in boneNameHashes)
+                    {
+                        var node = new GenericAnimationTransform();
+                        node.Hash = v;
+                        node.HashType = AnimNodeHashType.CRC32C;
+                        anim.TransformNodes.Add(node);
+                    }
+
+                    var offset = 0;
+                    ReadFrameData(d, offset, positionCount, dataOffset, boneCount, Tracks[0]);
+                    offset += positionCount;
+                    ReadFrameData(d, offset, rotationCount, dataOffset, boneCount, Tracks[1]);
+                    offset += rotationCount;
+                    ReadFrameData(d, offset, scaleCount, dataOffset, boneCount, Tracks[2]);
+                    offset += scaleCount;
+                    //ReadFrameData(d, unknownCount, dataOffset, boneCount, Tracks[3]);
+                }
+            }
+        }
+
         public void Open(FileItem file)
         {
             anim.Name = file.FilePath;
@@ -123,10 +210,12 @@ namespace Metanoia.Formats._3DS.Level5
 
                 d.Seek(flagOffset);
                 var boneIndex = d.ReadInt16();
-                var keyFrameCount = d.ReadByte();
-                var flag = d.ReadByte();
+                var lowFrameCount = d.ReadByte();
+                var hightFrameCount = d.ReadByte() - 32;
+
+                int keyFrameCount = (hightFrameCount << 8) | lowFrameCount;
                 
-                var node = anim.TransformNodes[boneIndex + (flag == 0 ? boneCount : 0)];
+                var node = anim.TransformNodes[boneIndex];
 
                 d.Seek(keyDataOffset);
                 for (int k = 0; k < keyFrameCount; k++)

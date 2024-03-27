@@ -31,10 +31,12 @@ namespace Metanoia.Rendering
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ModelViewer));
-            this.Viewport = new OpenTK.GLControl(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 24, 8, 16));
+            this.Viewport = new OpenTK.GLControl();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
+            this.exportModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
@@ -55,8 +57,6 @@ namespace Metanoia.Rendering
             this.buttonNext = new System.Windows.Forms.ToolStripButton();
             this.buttonEnd = new System.Windows.Forms.ToolStripButton();
             this.frameLabel = new System.Windows.Forms.ToolStripLabel();
-            this.exportAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exportModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1.SuspendLayout();
             this.animationTS.SuspendLayout();
             this.SuspendLayout();
@@ -110,12 +110,26 @@ namespace Metanoia.Rendering
             this.toolStripDropDownButton1.Size = new System.Drawing.Size(38, 22);
             this.toolStripDropDownButton1.Text = "File";
             // 
+            // exportModelToolStripMenuItem
+            // 
+            this.exportModelToolStripMenuItem.Name = "exportModelToolStripMenuItem";
+            this.exportModelToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.exportModelToolStripMenuItem.Text = "Export Model";
+            this.exportModelToolStripMenuItem.Click += new System.EventHandler(this.exportModelToolStripMenuItem_Click);
+            // 
             // importAnimationToolStripMenuItem
             // 
             this.importAnimationToolStripMenuItem.Name = "importAnimationToolStripMenuItem";
-            this.importAnimationToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.importAnimationToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.importAnimationToolStripMenuItem.Text = "Import Animation(s)";
             this.importAnimationToolStripMenuItem.Click += new System.EventHandler(this.importAnimationToolStripMenuItem_Click);
+            // 
+            // exportAnimationToolStripMenuItem
+            // 
+            this.exportAnimationToolStripMenuItem.Name = "exportAnimationToolStripMenuItem";
+            this.exportAnimationToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.exportAnimationToolStripMenuItem.Text = "Export Animation";
+            this.exportAnimationToolStripMenuItem.Click += new System.EventHandler(this.exportAnimationToolStripMenuItem_Click);
             // 
             // exportButton
             // 
@@ -229,7 +243,7 @@ namespace Metanoia.Rendering
             // 
             this.animationCB.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.animationCB.Name = "animationCB";
-            this.animationCB.Size = new System.Drawing.Size(121, 25);
+            this.animationCB.Size = new System.Drawing.Size(130, 25);
             this.animationCB.SelectedIndexChanged += new System.EventHandler(this.animationCB_SelectedIndexChanged);
             // 
             // buttonBegin
@@ -287,20 +301,6 @@ namespace Metanoia.Rendering
             this.frameLabel.Name = "frameLabel";
             this.frameLabel.Size = new System.Drawing.Size(69, 22);
             this.frameLabel.Text = "Frame: 0 / 0";
-            // 
-            // exportAnimationToolStripMenuItem
-            // 
-            this.exportAnimationToolStripMenuItem.Name = "exportAnimationToolStripMenuItem";
-            this.exportAnimationToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.exportAnimationToolStripMenuItem.Text = "Export Animation";
-            this.exportAnimationToolStripMenuItem.Click += new System.EventHandler(this.exportAnimationToolStripMenuItem_Click);
-            // 
-            // exportModelToolStripMenuItem
-            // 
-            this.exportModelToolStripMenuItem.Name = "exportModelToolStripMenuItem";
-            this.exportModelToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.exportModelToolStripMenuItem.Text = "Export Model";
-            this.exportModelToolStripMenuItem.Click += new System.EventHandler(this.exportModelToolStripMenuItem_Click);
             // 
             // ModelViewer
             // 

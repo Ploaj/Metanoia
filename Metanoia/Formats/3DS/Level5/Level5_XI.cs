@@ -57,6 +57,9 @@ namespace Metanoia.Formats._3DS.Level5
                 tex.FromBitmap(texture);
                 texture.Dispose();
             }
+
+            tex.PixelFormatTrue = xi.ImageFormat;
+
             return tex;
         }
 
@@ -239,8 +242,15 @@ namespace Metanoia.Formats._3DS.Level5
                 if (code != -1)
                 {
                     for (int h = 0; h < 8; h++)
+                    {
                         for (int w = 0; w < 8; w++)
-                            pixels[(x + w) + (y + h) * Width] = srcpix[(code * 8 + w) + (h) * tileSheet.Width];
+                        {
+                            if ((x + w) + (y + h) * Width < pixels.Length && (code * 8 + w) + (h) * tileSheet.Width < srcpix.Length)
+                            {
+                                pixels[(x + w) + (y + h) * Width] = srcpix[(code * 8 + w) + (h) * tileSheet.Width];
+                            }
+                        }
+                    }
                 }
                 if (code == -1 && (ImageFormat == 0xC || ImageFormat == 0xD))
                 {
