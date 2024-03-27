@@ -30,17 +30,19 @@ namespace Metanoia.Tools
 
         public static byte[] Level5Decom(byte[] b)
         {
-            int tableType = (b[0] & 0xFF);
+            int compressionType = (b[0] & 0x7);
 
             byte[] t;
 
             if (CheckLevel5Zlib(b, out t))
                 return t;
 
-            switch (tableType & 0xF)
+            Console.WriteLine(compressionType);
+
+            switch (compressionType)
             {
                 case 0x01:
-                    t = (lzss_Decompress(b));
+                    t = LZ10Decompress(b);
                     break;
                 case 0x02:
                     t = Huffman_Decompress(b, 4);
@@ -49,7 +51,7 @@ namespace Metanoia.Tools
                     t = Huffman_Decompress(b, 8);
                     break;
                 case 0x04:
-                    t = (rle_Decompress(b));
+                    t = rle_Decompress(b);
                     break;
                 default:
                     t = new byte[b.Length - 4];
@@ -377,55 +379,159 @@ namespace Metanoia.Tools
 
         }
 
-        public static byte[] lzss_Decompress(byte[] data)
+        public static byte[] LZ10Decompress(byte[] data)
         {
-            List<byte> o = new List<byte>();
-
-            int p = 4;
-            int op = 0;
-
-            int mask = 0;
-            int flag = 0;
-
-            while (p < data.Length)
+            using (var input = new MemoryStream(data))
             {
-                if (mask == 0)
-                {
-                    flag = (data[p++] & 0xFF);
-                    //					System.out.println(Integer.toHexString(flag));
-                    mask = 0x80;
-                }
+                return LZ10Decoder(input, (int)input.Length);
+            }
+        }
 
-                if ((flag & mask) == 0)
+        public static byte[] LZ10Decoder(Stream instream, int decompressedSize)
+        {
+            var compressionHeader = new byte[4];
+            instream.Read(compressionHeader, 0, 4);
+            if ((compressionHeader[0] & 0x7) != 0x1)
+                throw new Exception("Level5 LZ10");
+
+            decompressedSize = (compressionHeader[0] >> 3) | (compressionHeader[1] << 5) |
+                                   (compressionHeader[2] << 13) | (compressionHeader[3] << 21);
+
+            long inLength = instream.Length;
+            MemoryStream outstream = new MemoryStream();
+
+            long readBytes = 0;
+
+            // the maximum 'DISP-1' is 0xFFF.
+            int bufferLength = 0x1000;
+            byte[] buffer = new byte[bufferLength];
+            int bufferOffset = 0;
+
+
+            int currentOutSize = 0;
+            int flags = 0, mask = 1;
+            while (currentOutSize < decompressedSize)
+            {
+                // (throws when requested new flags byte is not available)
+                #region Update the mask. If all flag bits have been read, get a new set.
+                // the current mask is the mask used in the previous run. So if it masks the
+                // last flag bit, get a new flags byte.
+                if (mask == 1)
                 {
-                    if (p + 1 > data.Length) break;
-                    o.Add(data[p++]);
-                    op++;
+                    if (readBytes >= inLength)
+                        throw new Exception("Not enough data: " + currentOutSize.ToString() + ", " + decompressedSize.ToString());
+                    flags = instream.ReadByte(); readBytes++;
+                    if (flags < 0)
+                        throw new Exception("Stream too short!");
+                    mask = 0x80;
                 }
                 else
                 {
-                    if (p + 2 > data.Length) break;
-                    int dat = ((data[p++] & 0xFF) << 8) | (data[p++] & 0xFF);
-                    int pos = (dat & 0x0FFF) + 1;
-                    int length = (dat >> 12) + 3;
+                    mask >>= 1;
+                }
+                #endregion
 
-                    //				System.out.println(Integer.toHexString(dat) + "\t" + pos + "\t" + length);
+                // bit = 1 <=> compressed.
+                if ((flags & mask) > 0)
+                {
+                    // (throws when < 2 bytes are available)
+                    #region Get length and displacement('disp') values from next 2 bytes
+                    // there are < 2 bytes available when the end is at most 1 byte away
+                    if (readBytes + 1 >= inLength)
+                    {
+                        // make sure the stream is at the end
+                        if (readBytes < inLength)
+                        {
+                            instream.ReadByte(); readBytes++;
+                        }
+                        throw new Exception("Not enough data: " + currentOutSize.ToString() + ", " + decompressedSize.ToString());
+                    }
+                    int byte1 = instream.ReadByte(); readBytes++;
+                    int byte2 = instream.ReadByte(); readBytes++;
+                    if (byte2 < 0)
+                        throw new Exception("Stream too short!");
 
+                    // the number of bytes to copy
+                    int length = byte1 >> 4;
+                    length += 3;
+
+                    // from where the bytes should be copied (relatively)
+                    int disp = ((byte1 & 0x0F) << 8) | byte2;
+                    disp += 1;
+
+                    if (disp > currentOutSize)
+                        throw new Exception("Cannot go back more than already written. "
+                                + "DISP = 0x" + disp.ToString("X") + ", #written bytes = 0x" + currentOutSize.ToString("X")
+                                + " at 0x" + (instream.Position - 2).ToString("X"));
+                    #endregion
+
+                    int bufIdx = bufferOffset + bufferLength - disp;
                     for (int i = 0; i < length; i++)
                     {
-                        if (op - pos >= 0)
-                        {
-                            o.Add(o[op - pos >= o.Count ? 0 : op - pos]);
-                            op++;
-                        }
+                        byte next = buffer[bufIdx % bufferLength];
+                        bufIdx++;
+                        outstream.WriteByte(next);
+                        buffer[bufferOffset] = next;
+                        bufferOffset = (bufferOffset + 1) % bufferLength;
                     }
+                    currentOutSize += length;
                 }
-                mask >>= 1;
+                else
+                {
+                    if (readBytes >= inLength)
+                        throw new Exception("Not enough data: " + currentOutSize.ToString() + ", " + decompressedSize.ToString());
+                    int next = instream.ReadByte(); readBytes++;
+                    if (next < 0)
+                        throw new Exception("Stream too short!");
+
+                    currentOutSize++;
+                    outstream.WriteByte((byte)next);
+                    buffer[bufferOffset] = (byte)next;
+                    bufferOffset = (bufferOffset + 1) % bufferLength;
+                }
+                outstream.Flush();
             }
 
+            outstream.Position = 0;
+            return outstream.ToArray();
+        }
 
-            //Console.WriteLine("decompress " + p.ToString("x") + " " + data.Length.ToString("x"));
-            return o.ToArray();
+        public static unsafe int GetOccurrenceLength(byte* newPtr, int newLength, byte* oldPtr, int oldLength, out int disp, int minDisp = 1)
+        {
+            disp = 0;
+            if (newLength == 0)
+                return 0;
+            int maxLength = 0;
+            // try every possible 'disp' value (disp = oldLength - i)
+            for (int i = 0; i < oldLength - minDisp; i++)
+            {
+                // work from the start of the old data to the end, to mimic the original implementation's behaviour
+                // (and going from start to end or from end to start does not influence the compression ratio anyway)
+                byte* currentOldStart = oldPtr + i;
+                int currentLength = 0;
+                // determine the length we can copy if we go back (oldLength - i) bytes
+                // always check the next 'newLength' bytes, and not just the available 'old' bytes,
+                // as the copied data can also originate from what we're currently trying to compress.
+                for (int j = 0; j < newLength; j++)
+                {
+                    // stop when the bytes are no longer the same
+                    if (*(currentOldStart + j) != *(newPtr + j))
+                        break;
+                    currentLength++;
+                }
+
+                // update the optimal value
+                if (currentLength > maxLength)
+                {
+                    maxLength = currentLength;
+                    disp = oldLength - i;
+
+                    // if we cannot do better anyway, stop trying.
+                    if (maxLength == newLength)
+                        break;
+                }
+            }
+            return maxLength;
         }
 
         public static byte[] rle_Decompress(byte[] instream)
@@ -493,8 +599,8 @@ namespace Metanoia.Tools
             }
         }
 
-            // HuffmanDecoder & HuffmanHeaderlessDecoder From Kuriimu2
-            public class HuffmanDecoder
+        // HuffmanDecoder & HuffmanHeaderlessDecoder From Kuriimu2
+        public class HuffmanDecoder
         {
             private readonly int _bitDepth;
             private readonly HuffmanHeaderlessDecoder _decoder;
@@ -720,8 +826,6 @@ namespace Metanoia.Tools
 
             return dbuf;
         }
-
-
 
         public static byte[] SRD_Decomp(byte[] data)
         {

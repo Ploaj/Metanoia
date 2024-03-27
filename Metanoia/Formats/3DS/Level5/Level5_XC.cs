@@ -78,7 +78,7 @@ namespace Metanoia.Formats._3DS.Level5
 
                 byte[] nameTable = r.GetSection((uint)fileTableOffset, filenameTableSize);
                 if(!Decompress.CheckLevel5Zlib(nameTable, out nameTable))
-                    nameTable = Decompress.lzss_Decompress(nameTable);
+                    nameTable = Decompress.LZ10Decompress(nameTable);
                 using (DataReader nt = new DataReader(new MemoryStream(nameTable)))
                 {
                     for (int i = 0; i < fileCount; i++)

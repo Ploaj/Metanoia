@@ -39,6 +39,12 @@ namespace Metanoia.Formats._3DS.Level5
             var resourceNodeOffsets = r.ReadInt16() << 2;
             var resourceNodeCount = r.ReadInt16();
 
+            Console.WriteLine("stringTableOffset " + stringTableOffset);
+            Console.WriteLine("materialTableOffset " + materialTableOffset);
+            Console.WriteLine("materialTableSectionCount " + materialTableSectionCount);
+            Console.WriteLine("resourceNodeOffsets " + resourceNodeOffsets);
+            Console.WriteLine("resourceNodeCount " + resourceNodeCount);
+
             r.Seek((uint)stringTableOffset);
             Encoding shiftJIS = Encoding.GetEncoding("Shift-JIS");
             while (r.Position < r.BaseStream.Length)
@@ -189,6 +195,7 @@ namespace Metanoia.Formats._3DS.Level5
                 } else
                 {
                     r.Skip(0x02);
+                    Console.WriteLine("POSITION " + r.Position);
                     RES(r);
                 }
             }
